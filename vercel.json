@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "name": "4back",
+  "builds": [
+    {
+      "src": "./src/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/favicon.ico",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/favicon.png",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/index.ts"
+    }
+  ]
+}
