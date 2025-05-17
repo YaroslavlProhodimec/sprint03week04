@@ -1,29 +1,33 @@
-import {devicesService} from "../domain/devices-service";
-import {Request, Response} from "express";
+import { devicesService } from "../domain/devices-service";
+import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+
 export interface RequestWithDeviceId extends Request {
     deviceId: string;
 }
+
 export const getDevicesController = async (req: Request, res: Response) => {
     const userId = req.userId;
-
     const devices = await devicesService.getDevices(userId);
     console.log('devices:', devices)
-    res.status(200).json(devices);
+    res.status(StatusCodes.OK).json(devices);
 };
+
 export const deleteDevicesController = async (req: Request, res: Response) => {
     const userId = req.userId;
     const result = await devicesService.deleteDevices(userId);
 
     if (result === null) {
-        return res.status(500);
+        return res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
     }
 
     if (result.deletedCount === 0) {
-        return res.status(404);
+        return res.sendStatus(StatusCodes.NOT_FOUND);
     }
 
-    return res.status(204).send();
+    return res.sendStatus(StatusCodes.NO_CONTENT);
 };
+
 export const deleteDeviceByIdController = async (req: Request, res: Response) => {
     const userId = req.userId;
     const deviceId = req.params.id;
@@ -31,19 +35,19 @@ export const deleteDeviceByIdController = async (req: Request, res: Response) =>
     const result = await devicesService.deleteDeviceById(userId, deviceId);
 
     if (result === "not_found") {
-        return res.status(404);
+        return res.sendStatus(StatusCodes.NOT_FOUND);
     }
     if (result === "forbidden") {
-        return res.status(403);
+        return res.sendStatus(StatusCodes.FORBIDDEN);
     }
-    return res.status(204).send();
+    return res.sendStatus(StatusCodes.NO_CONTENT);
 };
-export const deleteAllOtherDevicesController = async  (req: Request, res: Response) => {
+
+export const deleteAllOtherDevicesController = async (req: Request, res: Response) => {
     const userId = req.userId;
-    const currentDeviceId : string = req.deviceId;
+    const currentDeviceId: string = req.deviceId;
 
-    const result = await devicesService.deleteAllOtherDevices(userId,currentDeviceId);
+    const result = await devicesService.deleteAllOtherDevices(userId, currentDeviceId);
 
-
-    return res.status(204).send();
+    return res.sendStatus(StatusCodes.NO_CONTENT);
 };
