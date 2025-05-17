@@ -22,7 +22,7 @@ export const deleteDevicesController = async (req: Request, res: Response) => {
 
     return res.status(204).send();
 };
-export const deleteDeviceIdController = async (req: Request, res: Response) => {
+export const deleteDeviceByIdController = async (req: Request, res: Response) => {
     const userId = req.userId;
     const deviceId = req.params.id;
 
