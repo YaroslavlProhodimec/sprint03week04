@@ -1,6 +1,8 @@
 import {devicesService} from "../domain/devices-service";
 import {Request, Response} from "express";
-
+export interface RequestWithDeviceId extends Request {
+    deviceId: string;
+}
 export const getDevicesController = async (req: Request, res: Response) => {
     const userId = req.userId;
 
@@ -34,5 +36,14 @@ export const deleteDeviceByIdController = async (req: Request, res: Response) =>
     if (result === "forbidden") {
         return res.status(403);
     }
+    return res.status(204).send();
+};
+export const deleteAllOtherDevicesController = async  (req: Request, res: Response) => {
+    const userId = req.userId;
+    const currentDeviceId : string = req.deviceId;
+
+    const result = await devicesService.deleteAllOtherDevices(userId,currentDeviceId);
+
+
     return res.status(204).send();
 };

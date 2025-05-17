@@ -50,7 +50,7 @@ export const devicesService = {
 // В сервисе:
     async deleteDeviceById(userId: string, deviceId: string) {
 
-       const device = await devicesCollection.findOne({deviceId});
+        const device = await devicesCollection.findOne({deviceId});
 
         if (!device) return "not_found";
 
@@ -58,6 +58,18 @@ export const devicesService = {
 
         await devicesCollection.deleteOne({deviceId, userId});
         return "deleted";
+    },
+    async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
+        try {
+            const result = await devicesCollection.deleteMany({
+                userId,
+                deviceId: { $ne: currentDeviceId }
+            });
+            return result.deletedCount; // возвращаем количество удалённых устройств
+        } catch (error) {
+            console.error("Ошибка при удалении устройств:", error);
+            return null;
+        }
     }
 
 };
