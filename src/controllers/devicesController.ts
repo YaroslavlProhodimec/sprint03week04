@@ -40,9 +40,17 @@ export const deleteDeviceByIdController = async (req: Request, res: Response) =>
     if (result === "forbidden") {
         return res.sendStatus(StatusCodes.FORBIDDEN);
     }
+
+    // Только если удаляем текущую сессию
+    if (req.deviceId && req.deviceId === deviceId) {
+        const refreshToken = req.cookies.refreshToken;
+        // @ts-ignore
+        await authService.placeRefreshTokenToBlacklist(refreshToken, req.userId);
+        res.clearCookie("refreshToken", { httpOnly: true, secure: true });
+    }
+
     return res.sendStatus(StatusCodes.NO_CONTENT);
 };
-
 export const deleteAllOtherDevicesController = async (req: Request, res: Response) => {
     const userId = req.userId;
     const currentDeviceId: string = req.deviceId;
