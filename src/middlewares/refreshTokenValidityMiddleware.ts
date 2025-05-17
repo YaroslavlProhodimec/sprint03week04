@@ -35,6 +35,7 @@ export const refreshTokenValidityMiddleware = async (
     } else {
       // @ts-ignore
       req.userId = refreshTokenJWTPayloadResult.userId;
+      req.deviceId = refreshTokenJWTPayloadResult.deviceId;
       next();
     }
   }

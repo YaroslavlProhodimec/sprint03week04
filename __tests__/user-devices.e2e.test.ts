@@ -210,47 +210,70 @@ describe("Devices API", () => {
         // expect(afterDeleteDevices.body.find((d: any) => d.deviceId === deviceId)).toBeDefined();
     },20000);
 
-    // it("Device lastActiveDate SHOULD be updated after refresh", async () => {
-    //     1. Получаем устройства до refresh
-        // const before = await request(app)
-        //     .get("/security/devices")
-        //     .set("Cookie", refreshToken)
-        //     .expect(StatusCodes.OK);
-        //
-        // const oldDate = before.body[0].lastActiveDate;
+    it("should not change deviceId after refresh, but should update lastActiveDate", async () => {
+        // 1. Создаём пользователя
+        const userCredentials = {
+            login: "alex4",
+            password: "string",
+            email: "yar.muratowww@gmail.com",
+        };
+        await request(app)
+            .post("/users")
+            .set("Authorization", `Basic YWRtaW46cXdlcnR5`)
+            .send(userCredentials)
+            .expect(StatusCodes.CREATED);
 
-    //     // 2. Делаем refresh токена
-    //     const refreshResult = await request(app)
-    //         .post("/auth/refresh-token")
-    //         .set("Cookie", refreshToken)
-    //         .expect(StatusCodes.OK);
-    //
-    //     const newRefreshToken = refreshResult.headers["set-cookie"].find((c: string) =>
-    //         c.startsWith("refreshToken")
-    //     );
-    //
-    //     // 3. Получаем устройства после refresh
-    //     const after = await request(app)
-    //         .get("/security/devices")
-    //         .set("Cookie", newRefreshToken)
-    //         .expect(StatusCodes.OK);
-    //
-    //     const newDate = after.body[0].lastActiveDate;
-    //
-    //     expect(new Date(newDate).getTime()).toBeGreaterThan(new Date(oldDate).getTime());
-    // });
+        // 2. Логинимся
+        const loginResult = await request(app)
+            .post("/auth/login")
+            .send({ loginOrEmail: "alex4", password: "string" })
+            .expect(StatusCodes.OK);
 
-    // it("Device SHOULD be deleted after logout", async () => {
-    //     // 1. Делаем logout
-    //     await request(app)
-    //         .post("/auth/logout")
-    //         .set("Cookie", refreshToken)
-    //         .expect(StatusCodes.NO_CONTENT);
-    //
-    //     // 2. Проверяем, что устройств больше нет
-    //     const devicesResult = await request(app)
-    //         .get("/security/devices")
-    //         .set("Cookie", refreshToken)
-    //         .expect(StatusCodes.UNAUTHORIZED); // или 200 и пустой массив, зависит от реализации
-    // });
+        const setCookie = loginResult.headers["set-cookie"];
+        const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+        const refreshToken = cookies.find((c) => c.startsWith("refreshToken"));
+
+        // 3. Получаем список устройств до refresh
+        const devicesBefore = await request(app)
+            .get("/security/devices")
+            .set("Cookie", refreshToken)
+            .expect(StatusCodes.OK);
+
+        expect(Array.isArray(devicesBefore.body)).toBe(true);
+        expect(devicesBefore.body.length).toBeGreaterThan(0);
+
+        const deviceBefore = devicesBefore.body[0];
+        const deviceIdBefore = deviceBefore.deviceId;
+        const lastActiveDateBefore = deviceBefore.lastActiveDate;
+
+        // 4. Делаем refresh токена
+        const refreshResult = await request(app)
+            .post("/auth/refresh-token")
+            .set("Cookie", refreshToken)
+            .expect(StatusCodes.OK);
+
+
+        const cookiesRefresh = Array.isArray(refreshResult.headers["set-cookie"]) ? refreshResult.headers["set-cookie"] : [refreshResult.headers["set-cookie"]];
+
+        const newRefreshToken = cookiesRefresh.find((c) =>
+            c.startsWith("refreshToken")
+        );
+
+        // 5. Получаем список устройств после refresh
+        const devicesAfter = await request(app)
+            .get("/security/devices")
+            .set("Cookie", newRefreshToken)
+            .expect(StatusCodes.OK);
+
+
+        const deviceAfter = devicesAfter.body.find((d:any) => d.deviceId === deviceIdBefore);
+
+        // Проверяем, что deviceId не изменился
+        expect(deviceAfter.deviceId).toBe(deviceIdBefore);
+
+        // Проверяем, что lastActiveDate обновился
+        expect(deviceAfter.lastActiveDate).not.toBe(lastActiveDateBefore);
+    }, 20000);
+
+
 });
