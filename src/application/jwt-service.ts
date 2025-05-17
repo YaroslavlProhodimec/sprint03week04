@@ -5,16 +5,19 @@ import jwt, {
 } from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import { JwtPayloadResult } from "../dto/common/jwt/JwtPayloadResult";
-
+type JwtPayload = {
+  userId: string;
+  deviceId?: string;
+};
 dotenv.config();
 
 export const jwtService = {
   async  createJWT(
-    userId: string,
-    secret: string,
+      payload: JwtPayload,
+      secret: string,
     expiresIn: number
   ): Promise<string> {
-    const token = jwt.sign({ userId }, secret, {
+    const token = jwt.sign({ ...payload}, secret, {
       expiresIn,
     });
     return token;

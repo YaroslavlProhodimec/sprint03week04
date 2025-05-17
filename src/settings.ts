@@ -10,6 +10,7 @@ import {authRouter} from "./routes/auth-route";
 import {usersRouter} from "./routes/users-route";
 import {commentsRoute} from "./routes/comments-route";
 import {emailRouter} from "./routes/email-router";
+import {securityDevicesRouter} from "./routes/security-devices-route";
 
 export const app = express();
 app.use(morgan("dev"));
@@ -33,6 +34,7 @@ app.get('/', (req, res) => {
 });
 
 // API маршруты
+app.use('/security/devices', securityDevicesRouter);
 app.use('/blogs', blogRoute);
 app.use('/posts', postRoute);
 app.use('/testing', testingRouter);

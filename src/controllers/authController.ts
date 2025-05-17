@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import {Request, Response} from "express";
 import {authService} from "../service/authService";
 import {StatusCodes} from "http-status-codes";
 import {create_access_refresh_tokens} from "../utils/auth-utils/create_Access_Refresh_Tokens";
@@ -12,45 +12,56 @@ dotenv.config();
 //
 import {RequestBodyModel} from "../dto/common/RequestModels";
 import {usersService} from "../domain/users-service";
+import {devicesCollection} from "../db";
+import {v4 as uuidv4} from "uuid";
+import {devicesService} from "../domain/devices-service";
 
 export const logIn = async (
-  req: RequestBodyModel<LoginInputModel>,
-  res: Response
+    req: RequestBodyModel<LoginInputModel>,
+    res: Response
 ) => {
-  const user = await usersService.checkCredentials(
-    req.body.loginOrEmail,
-    req.body.password
-  );
-  if (!user) {
-    res.sendStatus(StatusCodes.UNAUTHORIZED);
-    return;
-  }
 
-  const { accessToken, refreshToken } = await create_access_refresh_tokens(
-    user._id.toString()
-  );
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: true,
-  });
-  return res.status(StatusCodes.OK).send({ accessToken });
+    const ip = req.ip;
+    const userAgent = req.headers['user-agent'] || 'unknown device';
+
+    const user = await usersService.checkCredentials(
+        req.body.loginOrEmail,
+        req.body.password
+    );
+
+    if (!user) {
+        res.sendStatus(StatusCodes.UNAUTHORIZED);
+        return;
+    }
+
+    const deviceId = await devicesService.createDevice(user._id, ip, userAgent)
+
+    const {accessToken, refreshToken} = await create_access_refresh_tokens(
+        user._id.toString(),
+        deviceId
+    );
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+    });
+    return res.status(StatusCodes.OK).send({accessToken});
 };
 
 
 export const getInfoAboutUser = async (
-  req: Request,
-  res: Response<MeViewModel>
+    req: Request,
+    res: Response<MeViewModel>
 ) => {
-  const foundUser = await usersCommandsRepository.findUserById(req.userId);
-  if (foundUser) {
-    const currentUser = getCurrentUserInfo(foundUser);
-    res.status(StatusCodes.OK).send(currentUser);
-    return
-  } else {
-    res.sendStatus(StatusCodes.UNAUTHORIZED);
-      return
+    const foundUser = await usersCommandsRepository.findUserById(req.userId);
+    if (foundUser) {
+        const currentUser = getCurrentUserInfo(foundUser);
+        res.status(StatusCodes.OK).send(currentUser);
+        return
+    } else {
+        res.sendStatus(StatusCodes.UNAUTHORIZED);
+        return
 
-  }
+    }
 };
 //
 // export const registerUser = async (
@@ -128,7 +139,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         refreshTokenFromClient,
         req.userId
     );
-    const { accessToken, refreshToken } = await create_access_refresh_tokens(
+    const {accessToken, refreshToken} = await create_access_refresh_tokens(
         req.userId
     );
 
@@ -136,15 +147,15 @@ export const refreshToken = async (req: Request, res: Response) => {
         httpOnly: true,
         secure: true,
     });
-    res.status(StatusCodes.OK).send({ accessToken });
+    res.status(StatusCodes.OK).send({accessToken});
 };
 
 export const logout = async (req: Request, res: Response) => {
-  const refreshToken = req.cookies.refreshToken;
+    const refreshToken = req.cookies.refreshToken;
     // @ts-ignore
-  await authService.placeRefreshTokenToBlacklist(refreshToken, req.userId);
-  res.clearCookie("refreshToken", { httpOnly: true, secure: true });
+    await authService.placeRefreshTokenToBlacklist(refreshToken, req.userId);
+    res.clearCookie("refreshToken", {httpOnly: true, secure: true});
     // console.log( res.clearCookie("refreshToken", { httpOnly: true, secure: true }),' res.clearCookie("refreshToken", { httpOnly: true, secure: true });')
-  res.sendStatus(StatusCodes.NO_CONTENT);
+    res.sendStatus(StatusCodes.NO_CONTENT);
 };
 
