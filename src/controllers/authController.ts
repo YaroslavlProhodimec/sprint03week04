@@ -139,6 +139,9 @@ export const refreshToken = async (req: Request, res: Response) => {
         refreshTokenFromClient,
         req.userId
     );
+    const deviceId = req.deviceId;
+    const now = new Date();
+    await devicesService.updateDeviceLastActiveDate(deviceId, now);
     const {accessToken, refreshToken} = await create_access_refresh_tokens(
         req.userId
     );

@@ -70,6 +70,11 @@ export const devicesService = {
             console.error("Ошибка при удалении устройств:", error);
             return null;
         }
+    },
+    async updateDeviceLastActiveDate(deviceId: string, date: Date) {
+        await devicesCollection.updateOne(
+            { deviceId },
+            { $set: { lastActiveDate: date } }
+        );
     }
-
 };
