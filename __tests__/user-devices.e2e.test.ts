@@ -275,5 +275,61 @@ describe("Devices API", () => {
         expect(deviceAfter.lastActiveDate).not.toBe(lastActiveDateBefore);
     }, 20000);
 
+    it("User SHOULD be logged in and device deleted by id", async () => {
+        // 1. Создаём пользователя
+        const userCredentials = {
+            login: "alex4",
+            password: "string",
+            email: "yar.muratowww@gmail.com",
+        };
+        await request(app)
+            .post("/users")
+            .set("Authorization", `Basic YWRtaW46cXdlcnR5`)
+            .send(userCredentials)
+            .expect(StatusCodes.CREATED);
+
+        // 2. Логинимся
+        const loginResult = await request(app)
+            .post("/auth/login")
+            .send({ loginOrEmail: "alex4", password: "string" })
+            .expect(StatusCodes.OK);
+
+        const accessToken = loginResult.body.accessToken;
+        const setCookie = loginResult.headers["set-cookie"];
+        const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+        const refreshToken = cookies.find((c: string) => c.startsWith("refreshToken"));
+
+        // 3. Получаем список устройств
+        const devicesResult = await request(app)
+            .get("/security/devices")
+            .set("Cookie", refreshToken)
+            // .set("Authorization", `Bearer ${accessToken}`)
+            .expect(StatusCodes.OK);
+
+        // Проверяем, что хотя бы одно устройство есть
+        expect(Array.isArray(devicesResult.body)).toBe(true);
+        expect(devicesResult.body.length).toBeGreaterThan(0);
+
+        // Берём deviceId первого устройства
+        const deviceId = devicesResult.body[0].deviceId;
+        console.log('deviceId:', deviceId);
+
+        // 4. Удаляем устройство по deviceId
+        await request(app)
+            .delete(`/security/devices/${deviceId}`)
+            .set("Cookie", refreshToken)
+            // .set("Authorization", `Bearer ${accessToken}`)
+            .expect(StatusCodes.NO_CONTENT);
+
+        // 5. Проверяем, что устройство удалено
+        const afterDeleteDevices = await request(app)
+            .get("/security/devices")
+            .set("Cookie", refreshToken)
+            // .set("Authorization", `Bearer ${accessToken}`)
+            .expect(StatusCodes.OK);
+
+        // Теперь устройств должно быть меньше (или 0, если было одно)
+        expect(afterDeleteDevices.body.find((d: any) => d.deviceId === deviceId)).toBeUndefined();
+    });
 
 });
