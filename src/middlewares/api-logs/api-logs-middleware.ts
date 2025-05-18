@@ -33,7 +33,7 @@ export const apiLogsCountValidationMiddleware = async (
         // }
 
         // Просто выводим в консоль для проверки
-        console.log(`IP: ${ip}, URL: ${url}, count за 10 сек: ${count}`);
+        // console.log(`IP: ${ip}, URL: ${url}, count за 10 сек: ${count}`);
 
         next();
     } catch (e) {

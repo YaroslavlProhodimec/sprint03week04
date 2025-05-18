@@ -27,29 +27,29 @@ export const jwtService = {
     secret: string
   ): Promise<JwtPayloadResult | null> {
     try {
-      console.log(token,'token')
+      // console.log(token,'token')
       const result = jwt.verify(token, secret);
-      console.log(result,'result jwt.verify(token, secret);')
+      // console.log(result,'result jwt.verify(token, secret);')
       return result as JwtPayloadResult;
     } catch (error) {
       if (error instanceof TokenExpiredError) {
-        console.log({
-          name: error.name,
-          message: error.message,
-          expiredAt: error.expiredAt,
-        });
+        // console.log({
+        //   name: error.name,
+        //   message: error.message,
+        //   expiredAt: error.expiredAt,
+        // });
         return null;
       } else if (error instanceof JsonWebTokenError) {
-        console.log({
-          name: error.name,
-          message: error.message,
-        });
+        // console.log({
+        //   name: error.name,
+        //   message: error.message,
+        // });
         return null;
       } else if (error instanceof NotBeforeError) {
-        console.log({
-          name: error.name,
-          message: error.message,
-        });
+        // console.log({
+        //   name: error.name,
+        //   message: error.message,
+        // });
         return null;
       } else return null;
     }

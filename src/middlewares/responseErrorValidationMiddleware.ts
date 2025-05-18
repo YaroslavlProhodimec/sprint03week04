@@ -10,7 +10,7 @@ export const responseErrorValidationMiddleware = (
   next: NextFunction
 ) => {
   const errors: TFieldError[] = responseErrorTransformerFunction(req);
-  console.log(errors.length,'errors.length')
+  // console.log(errors.length,'errors.length')
   if (errors.length > 0) {
     res.status(StatusCodes.BAD_REQUEST).send(responseErrorFunction(errors));
   } else {

@@ -23,11 +23,11 @@ export const refreshTokensBlacklistedCollection =
 export const runDB = async () => {
     try {
         await client.connect();
-        console.log("Connected successfully to mongo server");
+        // console.log("Connected successfully to mongo server");
         await dbBlogs.command({ ping: 1 });
-        console.log("Client connected");
+        // console.log("Client connected");
     } catch (e) {
-        console.log("Can't connect to DB: ", e);
+        // console.log("Can't connect to DB: ", e);
         await client.close();
     }
 };

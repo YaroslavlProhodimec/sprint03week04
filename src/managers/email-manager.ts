@@ -7,10 +7,10 @@ import {WithId} from "mongodb";
 
 export const emailManager = {
     async sendEmail(user: any) {
-        console.log(user, 'user')
+        // console.log(user, 'user')
         const code = user.emailConfirmation.confirmationCode;
         const html = htmlEmailConfirmationCodeLetter(code);
-        console.log(html, 'html')
+        // console.log(html, 'html')
         await emailAdapter.sendEmail(user.accountData.email, html);
     },
     async resendEmailWithCode(user: WithId<any>): Promise<boolean> {

@@ -31,8 +31,9 @@ export const deleteDevicesController = async (req: Request, res: Response) => {
 export const deleteDeviceByIdController = async (req: Request, res: Response) => {
     const userId = req.userId;
     const deviceId = req.params.id;
+    const refreshToken = req.cookies.refreshToken;
 
-    const result = await devicesService.deleteDeviceById(userId, deviceId);
+    const result = await devicesService.deleteDeviceById(userId, deviceId, refreshToken);
 
     if (result === "not_found") {
         return res.sendStatus(StatusCodes.NOT_FOUND);
@@ -43,10 +44,11 @@ export const deleteDeviceByIdController = async (req: Request, res: Response) =>
 
     // Только если удаляем текущую сессию
     if (req.deviceId && req.deviceId === deviceId) {
-        const refreshToken = req.cookies.refreshToken;
-        // @ts-ignore
-        await authService.placeRefreshTokenToBlacklist(refreshToken, req.userId);
-        res.clearCookie("refreshToken", { httpOnly: true, secure: true });
+        // Очищаем куки на сервере
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: true
+        });
     }
 
     return res.sendStatus(StatusCodes.NO_CONTENT);

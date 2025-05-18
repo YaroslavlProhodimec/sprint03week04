@@ -75,8 +75,8 @@ export class UsersRepository {
 
         const passwordSalt = await bcrypt.genSalt(10)
         const passwordHash = await this._generateHash(password, passwordSalt)
-        console.log(passwordSalt, 'passwordSalt')
-        console.log(passwordHash, 'passwordHash')
+        // console.log(passwordSalt, 'passwordSalt')
+        // console.log(passwordHash, 'passwordHash')
         // const newUser = {
         //     _id: new ObjectId(),
         //     login:login,
@@ -141,8 +141,8 @@ export class UsersRepository {
 
         let filterLogin = {}
         let filterEmail = {}
-        console.log(searchLoginTerm, 'searchLoginTerm')
-        console.log(searchEmailTerm, 'searchEmailTerm')
+        // console.log(searchLoginTerm, 'searchLoginTerm')
+        // console.log(searchEmailTerm, 'searchEmailTerm')
 
         if (searchLoginTerm) {
             filterLogin = {

@@ -6,7 +6,7 @@ export const responseErrorTransformerFunction = (
     request: Request
 ): TFieldError[] => {
   const validationErrors = validationResult(request);
-    console.log(validationErrors,'validationErrors')
+    // console.log(validationErrors,'validationErrors')
   if (!validationErrors.isEmpty()) {
     const errors: TFieldError[] = validationErrors
         .array({ onlyFirstError: true })

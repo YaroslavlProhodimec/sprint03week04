@@ -62,9 +62,9 @@ export const authService = {
     },
 
     async confirmCode(code: string): Promise<any | string> {
-        console.log(code,'code')
+        // console.log(code,'code')
         const user = await usersQueryRepository.findUserByConfirmationCode(code);
-        console.log(user,'user')
+        // console.log(user,'user')
         if (!user || user?.emailConfirmation.confirmationCode !== code) {
             return new IncorrectConfirmationCodeError();
         }
@@ -103,7 +103,7 @@ export const authService = {
     async _generateHash(password: any,) {
         const passwordSalt = await bcrypt.genSalt(10)
         const hash = await bcrypt.hash(password, passwordSalt)
-        console.log(hash, 'hash')
+        // console.log(hash, 'hash')
 
         return hash
     },

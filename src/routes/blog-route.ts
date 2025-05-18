@@ -115,7 +115,7 @@ blogRoute.post('/:id/posts',
 
         const post = await PostRepository.getPostById(createdPostId)
 
-        console.log(post, 'post')
+        // console.log(post, 'post')
         if (!post) {
             res.sendStatus(404)
             return;

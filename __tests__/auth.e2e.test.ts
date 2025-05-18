@@ -29,7 +29,7 @@ describe("API for auth", () => {
             email: "yar.muratowww@gmail.com",
             createdAt: expect.any(String),
         });
-        console.log(createdUser, 'createdUser')
+        // console.log(createdUser, 'createdUser')
             const userLogin = {
                 loginOrEmail: "alex4",
                 password: "string",
@@ -42,8 +42,8 @@ describe("API for auth", () => {
             const accessToken = loginResult.body.accessToken;
             const refreshToken = loginResult.headers["set-cookie"];
 
-            console.log("accessToken: ", accessToken);
-            console.log("refreshToken: ", refreshToken);
+            // console.log("accessToken: ", accessToken);
+            // console.log("refreshToken: ", refreshToken);
 
             const refreshTokenResult = await request(app)
                 .post("/auth/refresh-token")

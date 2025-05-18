@@ -21,7 +21,7 @@ export const authCommandsRepository = {
             );
 
         // refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NTlkZTMzODU1MTc2YmFjNWRhMzVjYzUiLCJpYXQiOjE3MDQ4NDYxMzYsImV4cCI6MTcwNDg0ODEzNn0.75KHSa7CvEctvjf-9POk_FJtvtSZacSp_ov9sN52pY4
-        console.log(refreshTokensBlacklistedCollection, 'refreshTokensBlacklistedCollection updateOne')
+        // console.log(refreshTokensBlacklistedCollection, 'refreshTokensBlacklistedCollection updateOne')
         const resultFind = await refreshTokensBlacklistedCollection.findOne({_id: new ObjectId(userId)})
 
         console.log(resultFind, 'resultFinds  refreshTokensBlacklistedCollection.findOne')

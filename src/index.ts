@@ -9,10 +9,10 @@ const startApp = async () => {
         await runDB();
         const port = process.env.PORT || 5001;
         app.listen(port, () => {
-            console.log(`Server is running on port ${port}`);
+            // console.log(`Server is running on port ${port}`);
         });
     } catch (error) {
-        console.error('Failed to start server:', error);
+        // console.error('Failed to start server:', error);
         process.exit(1);
     }
 };

@@ -17,15 +17,15 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     }
 
     const [basic, token] = auth.split(' ')
-    console.log(basic, 'basic')
-    console.log(token, 'token')
+    // console.log(basic, 'basic')
+    // console.log(token, 'token')
     if (basic !== 'Basic') {
         res.sendStatus(401)
         return;
     }
 
     const decodedData = Buffer.from(token, 'base64').toString()
-    console.log(decodedData, 'decodedData')
+    // console.log(decodedData, 'decodedData')
     const [decodedLogin, decodedPassword] = decodedData.split(':')
 
     if (decodedLogin !== login || decodedPassword !== password) {
