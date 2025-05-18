@@ -63,7 +63,7 @@ export const devicesService = {
         try {
             const result = await devicesCollection.deleteMany({
                 userId,
-                deviceId: { $ne: currentDeviceId }
+                deviceId: {$ne: currentDeviceId}
             });
             return result.deletedCount; // возвращаем количество удалённых устройств
         } catch (error) {
@@ -73,8 +73,16 @@ export const devicesService = {
     },
     async updateDeviceLastActiveDate(deviceId: string, date: Date) {
         await devicesCollection.updateOne(
-            { deviceId },
-            { $set: { lastActiveDate: date } }
+            {deviceId},
+            {$set: {lastActiveDate: date}}
         );
+    },
+    async findDevice(userId: string, deviceId: string) {
+        // Ищем одно устройство по userId и deviceId
+        const device = await devicesCollection.findOne({
+            userId: userId,
+            deviceId: deviceId
+        });
+        return device; // Возвращаем найденный документ или null
     }
 };
