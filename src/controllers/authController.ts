@@ -20,7 +20,6 @@ export const logIn = async (
     req: RequestBodyModel<LoginInputModel>,
     res: Response
 ) => {
-
     const ip = req.ip;
     const userAgent = req.headers['user-agent'] || 'unknown device';
 
@@ -34,16 +33,30 @@ export const logIn = async (
         return;
     }
 
-    const deviceId = await devicesService.createDevice(user._id, ip, userAgent)
+    // Генерируем deviceId
+    const deviceId = uuidv4();
 
+    // Создаем токены
     const {accessToken, refreshToken} = await create_access_refresh_tokens(
         user._id.toString(),
         deviceId
     );
+
+    // Создаем устройство с refreshToken
+    await devicesService.createDevice(
+        user._id,
+        deviceId,  // Используем сгенерированный deviceId
+        ip,
+        userAgent,
+        refreshToken
+    );
+
+    // Устанавливаем куки
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
     });
+
     return res.status(StatusCodes.OK).send({accessToken});
 };
 
@@ -133,32 +146,110 @@ export const getInfoAboutUser = async (
 //
 // //@desc Generate new pair of access and refresh tokens (in cookie client must send correct refresh token that will be revoked after refreshing)
 
+// export const refreshToken = async (req: Request, res: Response) => {
+//     const refreshTokenFromClient = req.cookies.refreshToken;
+//     await authService.placeRefreshTokenToBlacklist(
+//         refreshTokenFromClient,
+//         req.userId
+//     );
+//     const deviceId = req.deviceId;
+//     const now = new Date();
+//     await devicesService.updateDeviceLastActiveDate(deviceId, now);
+//
+//     const {accessToken, refreshToken} = await create_access_refresh_tokens(
+//         req.userId
+//     );
+//
+//     res.cookie("refreshToken", refreshToken, {
+//         httpOnly: true,
+//         secure: true,
+//     });
+//     res.status(StatusCodes.OK).send({accessToken});
+// };
 export const refreshToken = async (req: Request, res: Response) => {
     const refreshTokenFromClient = req.cookies.refreshToken;
-    await authService.placeRefreshTokenToBlacklist(
-        refreshTokenFromClient,
-        req.userId
-    );
     const deviceId = req.deviceId;
-    const now = new Date();
-    await devicesService.updateDeviceLastActiveDate(deviceId, now);
-    const {accessToken, refreshToken} = await create_access_refresh_tokens(
-        req.userId
+    const userId = req.userId;
+
+    // Находим устройство
+    const device = await devicesCollection.findOne({
+        userId: userId,
+        deviceId: deviceId
+    });
+
+    if (!device) {
+        return res.sendStatus(StatusCodes.UNAUTHORIZED);
+    }
+
+    // Добавляем старый токен в черный список
+    await authService.placeRefreshTokenToBlacklist(
+        device.refreshToken,  // Используем токен из базы
+        userId
     );
 
+    // Создаем новые токены
+    const {accessToken, refreshToken} = await create_access_refresh_tokens(
+        userId,
+        deviceId
+    );
+
+    // Обновляем устройство с новым токеном
+    await devicesCollection.updateOne(
+        { userId, deviceId },
+        {
+            $set: {
+                refreshToken: refreshToken,
+                lastActiveDate: new Date()
+            }
+        }
+    );
+
+    // Устанавливаем новый токен в куки
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
     });
+
     res.status(StatusCodes.OK).send({accessToken});
 };
 
+// export const logout = async (req: Request, res: Response) => {
+//     const refreshToken = req.cookies.refreshToken;
+//     // @ts-ignore
+//     await authService.placeRefreshTokenToBlacklist(refreshToken, req.userId);
+//     res.clearCookie("refreshToken", {httpOnly: true, secure: true});
+//     // console.log( res.clearCookie("refreshToken", { httpOnly: true, secure: true }),' res.clearCookie("refreshToken", { httpOnly: true, secure: true });')
+//     res.sendStatus(StatusCodes.NO_CONTENT);
+// };
 export const logout = async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken;
-    // @ts-ignore
-    await authService.placeRefreshTokenToBlacklist(refreshToken, req.userId);
-    res.clearCookie("refreshToken", {httpOnly: true, secure: true});
-    // console.log( res.clearCookie("refreshToken", { httpOnly: true, secure: true }),' res.clearCookie("refreshToken", { httpOnly: true, secure: true });')
+    const deviceId = req.deviceId;
+    const userId = req.userId;
+
+    // Находим устройство
+    const device = await devicesCollection.findOne({
+        userId: userId,
+        deviceId: deviceId
+    });
+
+    if (device) {
+        // Добавляем токен из базы в черный список
+        await authService.placeRefreshTokenToBlacklist(
+            device.refreshToken,  // Используем токен из базы
+            userId
+        );
+
+        // Удаляем устройство из базы
+        await devicesCollection.deleteOne({
+            userId: userId,
+            deviceId: deviceId
+        });
+    }
+
+    // Очищаем куки
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: true
+    });
+
     res.sendStatus(StatusCodes.NO_CONTENT);
 };
-

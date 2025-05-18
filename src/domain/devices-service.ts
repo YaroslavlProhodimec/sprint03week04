@@ -5,17 +5,21 @@ import {InferIdType, ObjectId} from "mongodb";
 import {authQueryRepository} from "../repositories/query-repository/authQueryRepository";
 
 export const devicesService = {
-    async createDevice(userId: InferIdType<UserDBType>, ip: string | undefined, userAgent: string) {
-        const deviceId = uuidv4();
+    async createDevice(userId: InferIdType<UserDBType>,deviceId:string, ip: string | undefined, userAgent: string, refreshToken: string) {
+
         const now = new Date();
         // console.log('Что здесь', userId)
-        const result = await devicesCollection.insertOne({
-            userId: userId.toString(),
+        const device = {
+            userId,
             deviceId,
             ip,
-            title: userAgent,
-            lastActiveDate: now,
-        });
+            title: "unknown device",
+            lastActiveDate: new Date(),
+            refreshToken  // Добавляем refresh токен
+        };
+
+        const result = await devicesCollection.insertOne(device);
+        console.log('@result:', result);
 
         // console.log("@result:", result)
 
@@ -70,20 +74,29 @@ export const devicesService = {
         if (!device) return "not_found";
         if (device.userId !== userId) return "forbidden";
 
+        await refreshTokensBlacklistedCollection.updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $push: {
+                    refreshTokensArray: device.refreshToken
+                }
+            },
+            { upsert: true }
+        );
         // Добавляем refresh token в черный список только если удаляем текущую сессию
-        if (device.deviceId === deviceId) {
-            console.log('Добавляем в черный список...');
-            const updateResult = await refreshTokensBlacklistedCollection.updateOne(
-                { _id: new ObjectId(userId) },
-                {
-                    $push: {
-                        refreshTokensArray: refreshToken
-                    }
-                },
-                { upsert: true }
-            );
-            console.log('Результат updateOne:', updateResult);
-        }
+        // if (device.deviceId === deviceId) {
+        //     console.log('Добавляем в черный список...');
+        //     const updateResult = await refreshTokensBlacklistedCollection.updateOne(
+        //         { _id: new ObjectId(userId) },
+        //         {
+        //             $push: {
+        //                 refreshTokensArray: refreshToken
+        //             }
+        //         },
+        //         { upsert: true }
+        //     );
+        //     console.log('Результат updateOne:', updateResult);
+        // }
 
         await devicesCollection.deleteOne({deviceId, userId});
         console.log('Устройство удалено');
