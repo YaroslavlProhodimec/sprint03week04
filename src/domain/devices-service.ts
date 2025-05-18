@@ -70,36 +70,29 @@ export const devicesService = {
         if (!device) return "not_found";
         if (device.userId !== userId) return "forbidden";
 
-        // Добавляем refresh token в черный список
-        console.log('Добавляем в черный список...');
-        const updateResult = await refreshTokensBlacklistedCollection.updateOne(
-            { _id: new ObjectId(userId) },  // Ищем по _id вместо userId
-            {
-                $push: {
-                    refreshTokensArray: refreshToken
-                }
-            },
-            { upsert: true }
-        );
-        console.log('Результат updateOne:', {
-            matchedCount: updateResult.matchedCount,
-            modifiedCount: updateResult.modifiedCount,
-            upsertedCount: updateResult.upsertedCount,
-            upsertedId: updateResult.upsertedId
-        });
-
-        // Проверяем, что токен добавился
-        const checkDocument = await refreshTokensBlacklistedCollection.findOne({
-            _id: new ObjectId(userId)  // Ищем по _id
-        });
-        console.log('Документ после обновления:', checkDocument);
+        // Добавляем refresh token в черный список только если удаляем текущую сессию
+        if (device.deviceId === deviceId) {
+            console.log('Добавляем в черный список...');
+            const updateResult = await refreshTokensBlacklistedCollection.updateOne(
+                { _id: new ObjectId(userId) },
+                {
+                    $push: {
+                        refreshTokensArray: refreshToken
+                    }
+                },
+                { upsert: true }
+            );
+            console.log('Результат updateOne:', updateResult);
+        }
 
         await devicesCollection.deleteOne({deviceId, userId});
         console.log('Устройство удалено');
         console.log('=== Конец deleteDeviceById ===');
 
         return "deleted";
-    },    async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
+    },
+
+    async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
 
         try {
             const result = await devicesCollection.deleteMany({
