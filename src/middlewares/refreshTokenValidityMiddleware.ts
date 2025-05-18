@@ -19,7 +19,7 @@ export const refreshTokenValidityMiddleware = async (
       refreshTokenFromClient,
       process.env.REFRESH_TOKEN_SECRET as string
   );
-  // console.log(refreshTokenJWTPayloadResult,'refreshTokenJWTPayloadResult')
+  console.log(refreshTokenJWTPayloadResult,'refreshTokenJWTPayloadResult')
   if (!refreshTokenJWTPayloadResult) {
     res.sendStatus(StatusCodes.UNAUTHORIZED);
     return;

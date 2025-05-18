@@ -7,7 +7,7 @@ export const authQueryRepository = {
     refreshToken: string
   ): Promise<undefined | string> {
     const foundRefreshToken = await refreshTokensBlacklistedCollection.findOne({
-      userId: userId
+      _id: userId,
     });
     console.log(foundRefreshToken,'foundRefreshToken await refreshTokensBlacklistedCollection.findOne')
     if(!foundRefreshToken){

@@ -68,13 +68,12 @@ export const devicesService = {
         console.log('Найденное устройство:', device);
 
         if (!device) return "not_found";
-
         if (device.userId !== userId) return "forbidden";
 
         // Добавляем refresh token в черный список
         console.log('Добавляем в черный список...');
         const updateResult = await refreshTokensBlacklistedCollection.updateOne(
-            { userId: new ObjectId(userId) },
+            { _id: new ObjectId(userId) },  // Ищем по _id вместо userId
             {
                 $push: {
                     refreshTokensArray: refreshToken
@@ -91,27 +90,17 @@ export const devicesService = {
 
         // Проверяем, что токен добавился
         const checkDocument = await refreshTokensBlacklistedCollection.findOne({
-            userId: new ObjectId(userId)
+            _id: new ObjectId(userId)  // Ищем по _id
         });
         console.log('Документ после обновления:', checkDocument);
-
-        // Проверяем, что токен действительно в черном списке
-        const blacklistedToken = await authQueryRepository.findBlacklistedUserRefreshTokenById(
-            new ObjectId(userId),
-            refreshToken
-        );
-        console.log('Проверка токена в черном списке:', {
-            found: !!blacklistedToken,
-            token: blacklistedToken
-        });
 
         await devicesCollection.deleteOne({deviceId, userId});
         console.log('Устройство удалено');
         console.log('=== Конец deleteDeviceById ===');
 
         return "deleted";
-    },
-    async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
+    },    async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
+
         try {
             const result = await devicesCollection.deleteMany({
                 userId,
