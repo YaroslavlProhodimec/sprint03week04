@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 import { RefreshTokensBlacklistDB } from "./dto/authDTO/authDTO";
 import {BlogType} from "./types/blog/output";
 import {PostType} from "./types/post/output";
+import { CallToAPIType } from "./features/apiCallHistory/types";
 dotenv.config();
 export const mongoURI = process.env.MONGO_URL
 
@@ -19,6 +20,7 @@ export const commentsCollection = dbBlogs.collection('comments')
 export const usersCollection = dbBlogs.collection<any>('users')
 export const refreshTokensBlacklistedCollection =
     dbBlogs.collection<RefreshTokensBlacklistDB>("refresh-tokens-blacklisted");
+// export const APICallHistoryModelClass = mongoose.model<CallToAPIType>("APICallHistory",APICallHistorySchema);
 
 export const runDB = async () => {
     try {
