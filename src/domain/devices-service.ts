@@ -152,36 +152,40 @@ export const devicesService = {
         return "deleted";
     },
     // src/domain/devices-service.ts
-    async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
-        console.log('=== Начало deleteAllOtherDevices ===');
-        console.log('Входные параметры:', { userId, currentDeviceId });
+    // src/domain/devices-service.ts
+        async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
+            console.log('=== Начало deleteAllOtherDevices ===');
+            console.log('Входные параметры:', { userId, currentDeviceId });
 
-        // Находим все устройства пользователя
-        const devices = await devicesCollection.find({
-            userId: new ObjectId(userId)
-        }).toArray();
+            // Находим все устройства пользователя
+            const devices = await devicesCollection.find({
+                userId: new ObjectId(userId)
+            }).toArray();
 
-        console.log('Найденные устройства:', devices);
+            console.log('Найденные устройства:', devices);
 
-        // Добавляем все токены в черный список
-        for (const device of devices) {
-            console.log('Добавляем в черный список токен:', device.refreshToken);
-            await authService.placeRefreshTokenToBlacklist(
-                device.refreshToken,
-                userId
-            );
-        }
+            // Добавляем в черный список токены всех устройств КРОМЕ текущего
+            for (const device of devices) {
+                if (device.deviceId !== currentDeviceId) {
+                    console.log('Добавляем в черный список токен:', device.refreshToken);
+                    await authService.placeRefreshTokenToBlacklist(
+                        device.refreshToken,
+                        userId
+                    );
+                }
+            }
 
-        // Удаляем все устройства кроме текущего
-        const deleteResult = await devicesCollection.deleteMany({
-            userId: new ObjectId(userId),
-            deviceId: { $ne: currentDeviceId }
-        });
+            // Удаляем все устройства кроме текущего
+            const deleteResult = await devicesCollection.deleteMany({
+                userId: new ObjectId(userId),
+                deviceId: { $ne: currentDeviceId }
+            });
 
-        console.log('Результат удаления:', deleteResult);
-        console.log('=== Конец deleteAllOtherDevices ===');
+            console.log('Результат удаления:', deleteResult);
+            console.log('=== Конец deleteAllOtherDevices ===');
 
-        return deleteResult;
+            return deleteResult;
+
     },
     async updateDeviceLastActiveDate(deviceId: string, date: Date) {
         await devicesCollection.updateOne(
