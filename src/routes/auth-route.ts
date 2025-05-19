@@ -22,11 +22,13 @@ import {authValidator} from "../utils/auth-utils/auth-validator";
 import {getInfoAboutUser, logIn, logout, refreshToken} from "../controllers/authController";
 import {refreshTokenValidityMiddleware} from "../middlewares/refreshTokenValidityMiddleware";
 import {responseErrorValidationMiddleware} from "../middlewares/responseErrorValidationMiddleware";
+import {rateLimitMiddleware} from "../middlewares/rate-limit-middleware";
 
 
 export const authRouter = Router({})
 
 authRouter.post('/registration',
+    rateLimitMiddleware(5),
     userValidation(),
     async (req: any, res: Response) => {
         const user = await authService.createUser(req.body.login, req.body.email, req.body.password)
@@ -48,6 +50,7 @@ authRouter.post('/registration',
     })
 
 authRouter.post('/registration-confirmation',
+    rateLimitMiddleware(5),
     confirmationCodeValidator(),
     async (req: any, res: Response) => {
         const confirmCodeResult = await authService.confirmCode(req.body.code);
@@ -72,6 +75,7 @@ authRouter.post('/registration-confirmation',
 
 
 authRouter.post('/registration-email-resending',
+    rateLimitMiddleware(5),
     emailValidation(),
     async (req: any, res: Response) => {
         const resendEmailResult = await authService.resendEmail(req.body.email);
@@ -96,6 +100,7 @@ authRouter.post('/registration-email-resending',
 
 authRouter.post(
     "/login",
+    rateLimitMiddleware(5),
     authValidator,
     responseErrorValidationMiddleware,
     logIn
@@ -103,9 +108,10 @@ authRouter.post(
 
 authRouter.get(
     "/me",
+    rateLimitMiddleware(5),
     accessTokenValidityMiddleware,
     getInfoAboutUser
 );
 
-authRouter.post("/refresh-token", refreshTokenValidityMiddleware, refreshToken);
-authRouter.post("/logout", refreshTokenValidityMiddleware, logout);
+authRouter.post("/refresh-token",   rateLimitMiddleware(5), refreshTokenValidityMiddleware, refreshToken);
+authRouter.post("/logout",   rateLimitMiddleware(5), refreshTokenValidityMiddleware, logout);

@@ -8,6 +8,9 @@ const startApp = async () => {
     try {
         await runDB();
         const port = process.env.PORT || 5001;
+
+        app.set('trust proxy', true);
+
         app.listen(port, () => {
             // console.log(`Server is running on port ${port}`);
         });

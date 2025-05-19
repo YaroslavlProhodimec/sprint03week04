@@ -5,34 +5,34 @@ import {InferIdType, ObjectId} from "mongodb";
 import {authQueryRepository} from "../repositories/query-repository/authQueryRepository";
 
 export const devicesService = {
-    async createDevice(userId: InferIdType<UserDBType>,deviceId:string, ip: string | undefined, userAgent: string, refreshToken: string) {
+    async createDevice(userId: InferIdType<UserDBType>, deviceId: string, ip: string | undefined, userAgent: string, refreshToken: string) {
+        console.log('=== Начало createDevice ===');
+        console.log('Входные параметры:', { userId, deviceId, ip, userAgent, refreshToken });
 
-        const now = new Date();
-        // console.log('Что здесь', userId)
         const device = {
             userId,
             deviceId,
             ip,
-            title: "unknown device",
+            title: userAgent,
             lastActiveDate: new Date(),
-            refreshToken  // Добавляем refresh токен
+            refreshToken
         };
 
         const result = await devicesCollection.insertOne(device);
-        console.log('@result:', result);
-
-        // console.log("@result:", result)
+        console.log('Результат создания устройства:', result);
 
         if (!result.acknowledged || !result.insertedId) {
+            console.log('Ошибка создания устройства');
             throw new Error("Устройство не было сохранено в базу данных");
         }
 
+        console.log('=== Конец createDevice ===');
         return deviceId;
     },
     async getDevices(userId: string,) {
         // Находим все устройства пользователя
         // console.log('userId111', userId,)
-        const devices = await devicesCollection.find({userId}).toArray();
+        const devices = await devicesCollection.find({ userId: new ObjectId(userId) }).toArray();
         // console.log("devices1:", devices)
         // Приводим к нужному формату
 
@@ -64,17 +64,72 @@ export const devicesService = {
 //         await devicesCollection.deleteOne({deviceId, userId});
 //         return "deleted";
 //     },
+//     async deleteDeviceById(userId: string, deviceId: string, refreshToken: string) {
+//         console.log('=== Начало deleteDeviceById ===');
+//         console.log('Входные параметры:', { userId, deviceId, refreshToken });
+//
+//         const device = await devicesCollection.findOne({
+//             userId: new ObjectId(userId),
+//             deviceId: deviceId
+//         });
+//         console.log('Найденное устройство:', device);
+//
+//         if (!device) {
+//             console.log('Устройство не найдено');
+//             return "not_found";
+//         }
+//
+//         if (device.userId.toString() !== userId) {
+//             console.log('Доступ запрещен');
+//             return "forbidden";
+//         }
+//
+//         // Добавляем refresh token устройства в черный список
+//         console.log('Добавляем в черный список...');
+//         const updateResult = await refreshTokensBlacklistedCollection.updateOne(
+//             { _id: new ObjectId(userId) },
+//             {
+//                 $push: {
+//                     refreshTokensArray: device.refreshToken  // Используем токен устройства
+//                 }
+//             },
+//             { upsert: true }
+//         );
+//         console.log('Результат updateOne:', updateResult);
+//
+//         // Удаляем устройство
+//         await devicesCollection.deleteOne({
+//             userId: new ObjectId(userId),
+//             deviceId: deviceId
+//         });
+//         console.log('Устройство удалено');
+//         console.log('=== Конец deleteDeviceById ===');
+//
+//         return "deleted";
+//     },
     async deleteDeviceById(userId: string, deviceId: string, refreshToken: string) {
         console.log('=== Начало deleteDeviceById ===');
         console.log('Входные параметры:', { userId, deviceId, refreshToken });
 
-        const device = await devicesCollection.findOne({deviceId});
+        const device = await devicesCollection.findOne({
+            deviceId: deviceId  // Ищем только по deviceId
+        });
         console.log('Найденное устройство:', device);
 
-        if (!device) return "not_found";
-        if (device.userId !== userId) return "forbidden";
+        if (!device) {
+            console.log('Устройство не найдено');
+            return "not_found";
+        }
 
-        await refreshTokensBlacklistedCollection.updateOne(
+        // Проверяем принадлежность устройства
+        if (device.userId.toString() !== userId) {
+            console.log('Доступ запрещен');
+            return "forbidden";
+        }
+
+        // Добавляем refresh token устройства в черный список
+        console.log('Добавляем в черный список...');
+        const updateResult = await refreshTokensBlacklistedCollection.updateOne(
             { _id: new ObjectId(userId) },
             {
                 $push: {
@@ -83,33 +138,22 @@ export const devicesService = {
             },
             { upsert: true }
         );
-        // Добавляем refresh token в черный список только если удаляем текущую сессию
-        // if (device.deviceId === deviceId) {
-        //     console.log('Добавляем в черный список...');
-        //     const updateResult = await refreshTokensBlacklistedCollection.updateOne(
-        //         { _id: new ObjectId(userId) },
-        //         {
-        //             $push: {
-        //                 refreshTokensArray: refreshToken
-        //             }
-        //         },
-        //         { upsert: true }
-        //     );
-        //     console.log('Результат updateOne:', updateResult);
-        // }
+        console.log('Результат updateOne:', updateResult);
 
-        await devicesCollection.deleteOne({deviceId, userId});
+        // Удаляем устройство
+        await devicesCollection.deleteOne({
+            userId: new ObjectId(userId),
+            deviceId: deviceId
+        });
         console.log('Устройство удалено');
         console.log('=== Конец deleteDeviceById ===');
 
         return "deleted";
     },
-
     async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
-
         try {
             const result = await devicesCollection.deleteMany({
-                userId,
+                userId: new ObjectId(userId),  // Преобразуем в ObjectId
                 deviceId: {$ne: currentDeviceId}
             });
             return result.deletedCount; // возвращаем количество удалённых устройств
@@ -123,6 +167,28 @@ export const devicesService = {
             {deviceId},
             {$set: {lastActiveDate: date}}
         );
+    },
+    async updateDevice(userId: string, deviceId: string, newRefreshToken: string) {
+        console.log('=== Начало updateDevice ===');
+        console.log('Входные параметры:', { userId, deviceId, newRefreshToken });
+
+        const result = await devicesCollection.updateOne(
+            {
+                userId: new ObjectId(userId),
+                deviceId: deviceId
+            },
+            {
+                $set: {
+                    lastActiveDate: new Date(),
+                    refreshToken: newRefreshToken
+                }
+            }
+        );
+
+        console.log('Результат обновления:', result);
+        console.log('=== Конец updateDevice ===');
+
+        return result;
     },
     async findDevice(userId: string, deviceId: string) {
         // Ищем одно устройство по userId и deviceId

@@ -15,6 +15,7 @@ import {usersService} from "../domain/users-service";
 import {devicesCollection} from "../db";
 import {v4 as uuidv4} from "uuid";
 import {devicesService} from "../domain/devices-service";
+import {ObjectId} from "mongodb";
 
 export const logIn = async (
     req: RequestBodyModel<LoginInputModel>,
@@ -45,7 +46,7 @@ export const logIn = async (
     // Создаем устройство с refreshToken
     await devicesService.createDevice(
         user._id,
-        deviceId,  // Используем сгенерированный deviceId
+        deviceId,
         ip,
         userAgent,
         refreshToken
@@ -59,7 +60,6 @@ export const logIn = async (
 
     return res.status(StatusCodes.OK).send({accessToken});
 };
-
 
 export const getInfoAboutUser = async (
     req: Request,
@@ -166,6 +166,52 @@ export const getInfoAboutUser = async (
 //     });
 //     res.status(StatusCodes.OK).send({accessToken});
 // };
+// export const refreshToken = async (req: Request, res: Response) => {
+//     const refreshTokenFromClient = req.cookies.refreshToken;
+//     const deviceId = req.deviceId;
+//     const userId = req.userId;
+//
+//     // Находим устройство
+//     const device = await devicesCollection.findOne({
+//         userId: userId,
+//         deviceId: deviceId
+//     });
+//
+//     if (!device) {
+//         return res.sendStatus(StatusCodes.UNAUTHORIZED);
+//     }
+//
+//     // Добавляем старый токен в черный список
+//     await authService.placeRefreshTokenToBlacklist(
+//         device.refreshToken,  // Используем токен из базы
+//         userId
+//     );
+//
+//     // Создаем новые токены
+//     const {accessToken, refreshToken} = await create_access_refresh_tokens(
+//         userId,
+//         deviceId
+//     );
+//
+//     // Обновляем устройство с новым токеном
+//     await devicesCollection.updateOne(
+//         { userId, deviceId },
+//         {
+//             $set: {
+//                 refreshToken: refreshToken,
+//                 lastActiveDate: new Date()
+//             }
+//         }
+//     );
+//
+//     // Устанавливаем новый токен в куки
+//     res.cookie("refreshToken", refreshToken, {
+//         httpOnly: true,
+//         secure: true,
+//     });
+//
+//     res.status(StatusCodes.OK).send({accessToken});
+// };
 export const refreshToken = async (req: Request, res: Response) => {
     const refreshTokenFromClient = req.cookies.refreshToken;
     const deviceId = req.deviceId;
@@ -173,7 +219,7 @@ export const refreshToken = async (req: Request, res: Response) => {
 
     // Находим устройство
     const device = await devicesCollection.findOne({
-        userId: userId,
+        userId: new ObjectId(userId),  // Преобразуем в ObjectId
         deviceId: deviceId
     });
 
@@ -183,7 +229,7 @@ export const refreshToken = async (req: Request, res: Response) => {
 
     // Добавляем старый токен в черный список
     await authService.placeRefreshTokenToBlacklist(
-        device.refreshToken,  // Используем токен из базы
+        device.refreshToken,
         userId
     );
 
@@ -195,7 +241,10 @@ export const refreshToken = async (req: Request, res: Response) => {
 
     // Обновляем устройство с новым токеном
     await devicesCollection.updateOne(
-        { userId, deviceId },
+        {
+            userId: new ObjectId(userId),  // Преобразуем в ObjectId
+            deviceId
+        },
         {
             $set: {
                 refreshToken: refreshToken,
@@ -210,9 +259,8 @@ export const refreshToken = async (req: Request, res: Response) => {
         secure: true,
     });
 
-    res.status(StatusCodes.OK).send({accessToken});
+    return res.status(StatusCodes.OK).send({accessToken});
 };
-
 // export const logout = async (req: Request, res: Response) => {
 //     const refreshToken = req.cookies.refreshToken;
 //     // @ts-ignore
@@ -227,7 +275,7 @@ export const logout = async (req: Request, res: Response) => {
 
     // Находим устройство
     const device = await devicesCollection.findOne({
-        userId: userId,
+        userId: new ObjectId(userId),  // Преобразуем в ObjectId
         deviceId: deviceId
     });
 
@@ -240,7 +288,7 @@ export const logout = async (req: Request, res: Response) => {
 
         // Удаляем устройство из базы
         await devicesCollection.deleteOne({
-            userId: userId,
+            userId: new ObjectId(userId),  // Преобразуем в ObjectId
             deviceId: deviceId
         });
     }
