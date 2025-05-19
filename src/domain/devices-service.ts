@@ -3,6 +3,7 @@ import {devicesCollection, refreshTokensBlacklistedCollection} from "../db";
 import {UserDBType} from "../dto/usersDTO/usersDTO";
 import {InferIdType, ObjectId} from "mongodb";
 import {authQueryRepository} from "../repositories/query-repository/authQueryRepository";
+import {authService} from "../service/authService";
 
 export const devicesService = {
     async createDevice(userId: InferIdType<UserDBType>, deviceId: string, ip: string | undefined, userAgent: string, refreshToken: string) {
@@ -150,17 +151,37 @@ export const devicesService = {
 
         return "deleted";
     },
+    // src/domain/devices-service.ts
     async deleteAllOtherDevices(userId: string, currentDeviceId: string) {
-        try {
-            const result = await devicesCollection.deleteMany({
-                userId: new ObjectId(userId),  // Преобразуем в ObjectId
-                deviceId: {$ne: currentDeviceId}
-            });
-            return result.deletedCount; // возвращаем количество удалённых устройств
-        } catch (error) {
-            console.error("Ошибка при удалении устройств:", error);
-            return null;
+        console.log('=== Начало deleteAllOtherDevices ===');
+        console.log('Входные параметры:', { userId, currentDeviceId });
+
+        // Находим все устройства пользователя
+        const devices = await devicesCollection.find({
+            userId: new ObjectId(userId)
+        }).toArray();
+
+        console.log('Найденные устройства:', devices);
+
+        // Добавляем все токены в черный список
+        for (const device of devices) {
+            console.log('Добавляем в черный список токен:', device.refreshToken);
+            await authService.placeRefreshTokenToBlacklist(
+                device.refreshToken,
+                userId
+            );
         }
+
+        // Удаляем все устройства кроме текущего
+        const deleteResult = await devicesCollection.deleteMany({
+            userId: new ObjectId(userId),
+            deviceId: { $ne: currentDeviceId }
+        });
+
+        console.log('Результат удаления:', deleteResult);
+        console.log('=== Конец deleteAllOtherDevices ===');
+
+        return deleteResult;
     },
     async updateDeviceLastActiveDate(deviceId: string, date: Date) {
         await devicesCollection.updateOne(

@@ -1,11 +1,11 @@
 import request from "supertest";
 import { StatusCodes } from "http-status-codes";
+import app from "../src";
 
 describe("Rate Limit API", () => {
     beforeAll(async () => {
         await request(app).delete("/testing/all-data");
     });
-
     it("should limit login attempts", async () => {
         // 1. Создаём пользователя
         const userCredentials = {

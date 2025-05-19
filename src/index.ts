@@ -7,15 +7,15 @@ dotenv.config();
 const startApp = async () => {
     try {
         await runDB();
-        const port = process.env.PORT || 5001;
+        const port = process.env.PORT || 5003;
 
         app.set('trust proxy', true);
 
         app.listen(port, () => {
-            // console.log(`Server is running on port ${port}`);
+            console.log(`Server is running on port ${port}`);
         });
     } catch (error) {
-        // console.error('Failed to start server:', error);
+        console.error('Failed to start server:', error);
         process.exit(1);
     }
 };
