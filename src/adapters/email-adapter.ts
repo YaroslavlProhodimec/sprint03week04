@@ -12,15 +12,16 @@ export const emailAdapter = {
                             user: process.env.MAIL,
                             pass: process.env.PASS,
                         },
+
                     })
             );
 
             transport.verify((error, success) => {
                 if (error) {
-                    // console.log(error);
+                    console.log(error);
                 } else {
-                    // console.log("Ready for messages");
-                    // console.log(success);
+                    console.log("Ready for messages");
+                    console.log(success);
                 }
             });
             let info = await transport.sendMail(
@@ -31,10 +32,10 @@ export const emailAdapter = {
                         html: html
                     }
                 )
-            // console.log(info, 'info')
+            console.log(info, 'info')
 
         } catch (e) {
-            // console.log(e, 'error final grande')
+            console.log(e, 'error final grande')
         }
         // res.send({
         //     'email': req.body.email,

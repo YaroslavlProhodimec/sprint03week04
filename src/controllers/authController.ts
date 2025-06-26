@@ -12,10 +12,15 @@ dotenv.config();
 //
 import {RequestBodyModel} from "../dto/common/RequestModels";
 import {usersService} from "../domain/users-service";
-import {devicesCollection} from "../db";
+import {devicesCollection, usersCollection} from "../db";
 import {v4 as uuidv4} from "uuid";
 import {devicesService} from "../domain/devices-service";
 import {ObjectId} from "mongodb";
+import {usersQueryRepository} from "../repositories/query-repository/usersQueryRepository";
+import {createConfirmationCode} from "../utils/auth-utils/create-user-confirmation-code";
+import {createCodeExpirationDate} from "../utils/auth-utils/create-code-expiration-date";
+import {emailManager} from "../managers/email-manager";
+import bcrypt from "bcrypt";
 
 export const logIn = async (
     req: RequestBodyModel<LoginInputModel>,
@@ -298,6 +303,66 @@ export const logout = async (req: Request, res: Response) => {
         httpOnly: true,
         secure: true
     });
+
+    res.sendStatus(StatusCodes.NO_CONTENT);
+};
+
+export const passwordRecovery = async (req: Request, res: Response) => {
+
+    const {email} = req.body;
+
+    const user = await usersQueryRepository.findByLoginOrEmail(email);
+
+    console.log(user,'user')
+    if (user) {
+        // Генерируем recoveryCode
+        const recoveryCode = createConfirmationCode();
+
+        const expirationDate  = createCodeExpirationDate()
+
+        // Сохраняем recoveryCode в базе (например, в поле user.recoveryCode)
+        // await usersService.setRecoveryCode(userId._id, recoveryCode, expirationDate);
+        await usersService.setRecoveryCode(user._id.toString(), recoveryCode, expirationDate);
+        // Формируем ссылку для письма
+        const recoveryLink = `https://somesite.com/password-recovery?recoveryCode=${recoveryCode}`;
+
+        // Отправляем письмо
+        await emailManager.sendPasswordRecoveryEmail(email, recoveryLink);
+    }
+
+    res.sendStatus(StatusCodes.NO_CONTENT);
+};
+// "email": "yar.muratof@gmail.com"
+export const newPassword= async (req: Request, res: Response) => {
+    const { newPassword, recoveryCode } = req.body;
+
+    const user = await usersQueryRepository.findByCodeRecovery(recoveryCode);
+    console.log(user,'user')
+
+    if (!user) {
+        return res.status(StatusCodes.BAD_REQUEST).send({
+            errorsMessages: [{ message: "Recovery code is incorrect", field: "recoveryCode" }]
+        });
+    }
+
+    if (user.recoveryCodeExpiration < new Date()) {
+        return res.status(StatusCodes.BAD_REQUEST).send({
+            errorsMessages: [{ message: "Recovery code expired", field: "recoveryCode" }]
+        });
+    }
+
+    // Хешируем новый пароль
+    // const passwordHash = await bcrypt.hash(newPassword, 10);
+    const passwordHash = await authService._generateHash(newPassword);
+
+    // Обновляем пользователя
+    await usersCollection.updateOne(
+        { _id: user._id },
+        {
+            $set: { "accountData.passwordHash": passwordHash },
+            $unset: { recoveryCode: "", recoveryCodeExpiration: "" }
+        }
+    );
 
     res.sendStatus(StatusCodes.NO_CONTENT);
 };

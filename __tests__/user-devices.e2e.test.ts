@@ -10,61 +10,61 @@ describe("Devices API", () => {
         await request(app).delete("/testing/all-data");
     });
 
-    // it("should create user and login 4 times with different user-agents", async () => {
-    //     // 1. Создаём пользователя
-    //     const userCredentials = {
-    //         login: "alex4",
-    //         password: "string",
-    //         email: "yar.muratowww@gmail.com",
-    //     };
-    //     await request(app)
-    //         .post("/users")
-    //         .set("Authorization", `Basic YWRtaW46cXdlcnR5`)
-    //         .send(userCredentials)
-    //         .expect(StatusCodes.CREATED);
-    //
-    //     // 2. Логинимся 4 раза с разными user-agent
-    //     const userAgents = [
-    //         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    //         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-    //         "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)",
-    //         "Mozilla/5.0 (Linux; Android 11; SM-G991B)"
-    //     ];
-    //
-    //     const devices = [];
-    //
-    //     for (const userAgent of userAgents) {
-    //         const loginResult = await request(app)
-    //             .post("/auth/login")
-    //             .set("User-Agent", userAgent)
-    //             .send({ loginOrEmail: "alex4", password: "string" })
-    //             .expect(StatusCodes.OK);
-    //
-    //         const setCookie = loginResult.headers["set-cookie"];
-    //         const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
-    //         const refreshToken = cookies.find((c: string) => c.startsWith("refreshToken"));
-    //
-    //         devices.push({
-    //             refreshToken,
-    //             userAgent
-    //         });
-    //     }
-    //
-    //     // 3. Проверяем, что у нас 4 разных устройства
-    //     const devicesResult = await request(app)
-    //         .get("/security/devices")
-    //         .set("Cookie", devices[0].refreshToken)
-    //         .expect(StatusCodes.OK);
-    //
-    //     expect(Array.isArray(devicesResult.body)).toBe(true);
-    //     expect(devicesResult.body.length).toBe(4);
-    //
-    //     // 4. Проверяем, что у каждого устройства свой user-agent
-    //     const deviceTitles = devicesResult.body.map((d: any) => d.title);
-    //     expect(deviceTitles).toEqual(userAgents);
-    //
-    //     return devices; // Возвращаем устройства для следующих тестов
-    // });
+    it("should create user and login 4 times with different user-agents", async () => {
+        // 1. Создаём пользователя
+        const userCredentials = {
+            login: "alex4",
+            password: "string",
+            email: "yar.muratof@gmail.com",
+        };
+        await request(app)
+            .post("/users")
+            .set("Authorization", `Basic YWRtaW46cXdlcnR5`)
+            .send(userCredentials)
+            .expect(StatusCodes.CREATED);
+
+        // 2. Логинимся 4 раза с разными user-agent
+        const userAgents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)",
+            "Mozilla/5.0 (Linux; Android 11; SM-G991B)"
+        ];
+
+        const devices = [];
+
+        for (const userAgent of userAgents) {
+            const loginResult = await request(app)
+                .post("/auth/login")
+                .set("User-Agent", userAgent)
+                .send({ loginOrEmail: "alex4", password: "string" })
+                .expect(StatusCodes.OK);
+
+            const setCookie = loginResult.headers["set-cookie"];
+            const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+            const refreshToken = cookies.find((c: string) => c.startsWith("refreshToken"));
+
+            devices.push({
+                refreshToken,
+                userAgent
+            });
+        }
+
+        // 3. Проверяем, что у нас 4 разных устройства
+        const devicesResult = await request(app)
+            .get("/security/devices")
+            .set("Cookie", devices[0].refreshToken)
+            .expect(StatusCodes.OK);
+
+        expect(Array.isArray(devicesResult.body)).toBe(true);
+        expect(devicesResult.body.length).toBe(4);
+
+        // 4. Проверяем, что у каждого устройства свой user-agent
+        const deviceTitles = devicesResult.body.map((d: any) => d.title);
+        expect(deviceTitles).toEqual(userAgents);
+
+        return devices; // Возвращаем устройства для следующих тестов
+    });
     // it("should handle errors 404, 401, 403", async () => {
     //     // 1. Создаём первого пользователя
     //     const userCredentials = {
@@ -430,87 +430,87 @@ describe("Devices API", () => {
     //         device3Id
     //     };
     // });
-    it("should delete all other devices and keep only current one", async () => {
-        // 1. Создаём пользователя
-        const userCredentials = {
-            login: "alex4",
-            password: "string",
-            email: "yar.muratowww@gmail.com",
-        };
-        await request(app)
-            .post("/users")
-            .set("Authorization", `Basic YWRtaW46cXdlcnR5`)
-            .send(userCredentials)
-            .expect(StatusCodes.CREATED);
-
-        // 2. Логинимся первый раз (девайс 1)
-        const firstLoginResult = await request(app)
-            .post("/auth/login")
-            .send({ loginOrEmail: "alex4", password: "string" })
-            .expect(StatusCodes.OK);
-
-        const firstSetCookie = firstLoginResult.headers["set-cookie"];
-        const firstCookies = Array.isArray(firstSetCookie) ? firstSetCookie : [firstSetCookie];
-        const device1Token = firstCookies.find((c: string) => c.startsWith("refreshToken"));
-
-        // 3. Логинимся второй раз (девайс 2)
-        const secondLoginResult = await request(app)
-            .post("/auth/login")
-            .send({ loginOrEmail: "alex4", password: "string" })
-            .expect(StatusCodes.OK);
-
-        const secondSetCookie = secondLoginResult.headers["set-cookie"];
-        const secondCookies = Array.isArray(secondSetCookie) ? secondSetCookie : [secondSetCookie];
-        const device2Token = secondCookies.find((c: string) => c.startsWith("refreshToken"));
-
-        // 4. Логинимся третий раз (девайс 3)
-        const thirdLoginResult = await request(app)
-            .post("/auth/login")
-            .send({ loginOrEmail: "alex4", password: "string" })
-            .expect(StatusCodes.OK);
-
-        const thirdSetCookie = thirdLoginResult.headers["set-cookie"];
-        const thirdCookies = Array.isArray(thirdSetCookie) ? thirdSetCookie : [thirdSetCookie];
-        const device3Token = thirdCookies.find((c: string) => c.startsWith("refreshToken"));
-
-        // 5. Получаем список устройств до удаления
-        const devicesBeforeDelete = await request(app)
-            .get("/security/devices")
-            .set("Cookie", device1Token)
-            .expect(StatusCodes.OK);
-
-        // Сохраняем deviceId первого устройства
-        const device1Id = devicesBeforeDelete.body[0].deviceId;
-
-        // 6. Удаляем все остальные устройства
-        await request(app)
-            .delete("/security/devices")
-            .set("Cookie", device1Token)
-            .expect(StatusCodes.NO_CONTENT);
-
-        // 7. Проверяем список устройств
-        const devicesAfterDelete = await request(app)
-            .get("/security/devices")
-            .set("Cookie", device1Token)
-            .expect(StatusCodes.OK);
-
-        // Проверяем, что осталось только одно устройство
-        expect(devicesAfterDelete.body.length).toBe(1);
-
-        // Проверяем, что это именно первое устройство
-        expect(devicesAfterDelete.body[0].deviceId).toBe(device1Id);
-
-        // Проверяем, что других устройств нет
-        const otherDevicesExist = devicesAfterDelete.body.some((d: any) => d.deviceId !== device1Id);
-        expect(otherDevicesExist).toBe(false);
-
-        return {
-            device1Token,
-            device2Token,
-            device3Token,
-            device1Id
-        };
-    });
+    // it("should delete all other devices and keep only current one", async () => {
+    //     // 1. Создаём пользователя
+    //     const userCredentials = {
+    //         login: "alex4",
+    //         password: "string",
+    //         email: "yar.muratowww@gmail.com",
+    //     };
+    //     await request(app)
+    //         .post("/users")
+    //         .set("Authorization", `Basic YWRtaW46cXdlcnR5`)
+    //         .send(userCredentials)
+    //         .expect(StatusCodes.CREATED);
+    //
+    //     // 2. Логинимся первый раз (девайс 1)
+    //     const firstLoginResult = await request(app)
+    //         .post("/auth/login")
+    //         .send({ loginOrEmail: "alex4", password: "string" })
+    //         .expect(StatusCodes.OK);
+    //
+    //     const firstSetCookie = firstLoginResult.headers["set-cookie"];
+    //     const firstCookies = Array.isArray(firstSetCookie) ? firstSetCookie : [firstSetCookie];
+    //     const device1Token = firstCookies.find((c: string) => c.startsWith("refreshToken"));
+    //
+    //     // 3. Логинимся второй раз (девайс 2)
+    //     const secondLoginResult = await request(app)
+    //         .post("/auth/login")
+    //         .send({ loginOrEmail: "alex4", password: "string" })
+    //         .expect(StatusCodes.OK);
+    //
+    //     const secondSetCookie = secondLoginResult.headers["set-cookie"];
+    //     const secondCookies = Array.isArray(secondSetCookie) ? secondSetCookie : [secondSetCookie];
+    //     const device2Token = secondCookies.find((c: string) => c.startsWith("refreshToken"));
+    //
+    //     // 4. Логинимся третий раз (девайс 3)
+    //     const thirdLoginResult = await request(app)
+    //         .post("/auth/login")
+    //         .send({ loginOrEmail: "alex4", password: "string" })
+    //         .expect(StatusCodes.OK);
+    //
+    //     const thirdSetCookie = thirdLoginResult.headers["set-cookie"];
+    //     const thirdCookies = Array.isArray(thirdSetCookie) ? thirdSetCookie : [thirdSetCookie];
+    //     const device3Token = thirdCookies.find((c: string) => c.startsWith("refreshToken"));
+    //
+    //     // 5. Получаем список устройств до удаления
+    //     const devicesBeforeDelete = await request(app)
+    //         .get("/security/devices")
+    //         .set("Cookie", device1Token)
+    //         .expect(StatusCodes.OK);
+    //
+    //     // Сохраняем deviceId первого устройства
+    //     const device1Id = devicesBeforeDelete.body[0].deviceId;
+    //
+    //     // 6. Удаляем все остальные устройства
+    //     await request(app)
+    //         .delete("/security/devices")
+    //         .set("Cookie", device1Token)
+    //         .expect(StatusCodes.NO_CONTENT);
+    //
+    //     // 7. Проверяем список устройств
+    //     const devicesAfterDelete = await request(app)
+    //         .get("/security/devices")
+    //         .set("Cookie", device1Token)
+    //         .expect(StatusCodes.OK);
+    //
+    //     // Проверяем, что осталось только одно устройство
+    //     expect(devicesAfterDelete.body.length).toBe(1);
+    //
+    //     // Проверяем, что это именно первое устройство
+    //     expect(devicesAfterDelete.body[0].deviceId).toBe(device1Id);
+    //
+    //     // Проверяем, что других устройств нет
+    //     const otherDevicesExist = devicesAfterDelete.body.some((d: any) => d.deviceId !== device1Id);
+    //     expect(otherDevicesExist).toBe(false);
+    //
+    //     return {
+    //         device1Token,
+    //         device2Token,
+    //         device3Token,
+    //         device1Id
+    //     };
+    // });
     //     // 1. Создаём пользователя
     //     const userCredentials = {
     //         login: "alex4",

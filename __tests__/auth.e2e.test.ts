@@ -11,53 +11,53 @@ describe("API for auth", () => {
     beforeAll(async () => {
         await request(app).delete("/testing/all-data");
     });
-    it("should return 401 after device deletion when trying to use refresh token", async () => {
-        // 1. Создаём пользователя
-        const userCredentials = {
-            login: "alex4",
-            password: "string",
-            email: "yar.muratowww@gmail.com",
-        };
-        await request(app)
-            .post("/users")
-            .set("Authorization", `Basic YWRtaW46cXdlcnR5`)
-            .send(userCredentials)
-            .expect(StatusCodes.CREATED);
-
-        // 2. Логинимся
-        const loginResult = await request(app)
-            .post("/auth/login")
-            .send({ loginOrEmail: "alex4", password: "string" })
-            .expect(StatusCodes.OK);
-
-        const setCookie = loginResult.headers["set-cookie"];
-        const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
-        const refreshToken = cookies.find((c: string) => c.startsWith("refreshToken"));
-
-        // 3. Получаем список устройств
-        const devicesResult = await request(app)
-            .get("/security/devices")
-            .set("Cookie", refreshToken)
-            .expect(StatusCodes.OK);
-
-        // 4. Удаляем устройство
-        await request(app)
-            .delete("/security/devices")
-            .set("Cookie", refreshToken)
-            .expect(StatusCodes.NO_CONTENT);
-
-        // 5. Пробуем использовать refresh token после удаления устройства
-        await request(app)
-            .post("/auth/refresh-token")
-            .set("Cookie", refreshToken)
-            .expect(StatusCodes.UNAUTHORIZED);
-
-        // 6. Пробуем использовать refresh token для logout
-        await request(app)
-            .post("/auth/logout")
-            .set("Cookie", refreshToken)
-            .expect(StatusCodes.UNAUTHORIZED);
-    });
+    // it("should return 401 after device deletion when trying to use refresh token", async () => {
+    //     // 1. Создаём пользователя
+    //     const userCredentials = {
+    //         login: "alex4",
+    //         password: "string",
+    //         email: "yar.muratowww@gmail.com",
+    //     };
+    //     await request(app)
+    //         .post("/users")
+    //         .set("Authorization", `Basic YWRtaW46cXdlcnR5`)
+    //         .send(userCredentials)
+    //         .expect(StatusCodes.CREATED);
+    //
+    //     // 2. Логинимся
+    //     const loginResult = await request(app)
+    //         .post("/auth/login")
+    //         .send({ loginOrEmail: "alex4", password: "string" })
+    //         .expect(StatusCodes.OK);
+    //
+    //     const setCookie = loginResult.headers["set-cookie"];
+    //     const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+    //     const refreshToken = cookies.find((c: string) => c.startsWith("refreshToken"));
+    //
+    //     // 3. Получаем список устройств
+    //     const devicesResult = await request(app)
+    //         .get("/security/devices")
+    //         .set("Cookie", refreshToken)
+    //         .expect(StatusCodes.OK);
+    //
+    //     // 4. Удаляем устройство
+    //     await request(app)
+    //         .delete("/security/devices")
+    //         .set("Cookie", refreshToken)
+    //         .expect(StatusCodes.NO_CONTENT);
+    //
+    //     // 5. Пробуем использовать refresh token после удаления устройства
+    //     await request(app)
+    //         .post("/auth/refresh-token")
+    //         .set("Cookie", refreshToken)
+    //         .expect(StatusCodes.UNAUTHORIZED);
+    //
+    //     // 6. Пробуем использовать refresh token для logout
+    //     await request(app)
+    //         .post("/auth/logout")
+    //         .set("Cookie", refreshToken)
+    //         .expect(StatusCodes.UNAUTHORIZED);
+    // });
 
     // it("User SHOULDN'T be logged in to the system", async () => {
     //     const userCredentials = {

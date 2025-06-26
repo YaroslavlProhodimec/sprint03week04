@@ -19,11 +19,19 @@ import {
 import {WrongEmailError} from "../utils/errors-utils/resend-email-errors/WrongEmailError";
 import {EmailAlreadyConfirmedError} from "../utils/errors-utils/resend-email-errors/EmailAlreadyConfirmedError";
 import {authValidator} from "../utils/auth-utils/auth-validator";
-import {getInfoAboutUser, logIn, logout, refreshToken} from "../controllers/authController";
+import {
+    getInfoAboutUser,
+    logIn,
+    logout,
+    newPassword,
+    passwordRecovery,
+    refreshToken
+} from "../controllers/authController";
 import {refreshTokenValidityMiddleware} from "../middlewares/refreshTokenValidityMiddleware";
 import {responseErrorValidationMiddleware} from "../middlewares/responseErrorValidationMiddleware";
 import {rateLimitMiddleware} from "../middlewares/rate-limit-middleware";
 import {attemptsMiddleware} from "../middlewares/attemptsMiddleware";
+import {passwordRecoveryValidation} from "../validators/password-recovery";
 
 
 export const authRouter = Router({})
@@ -34,6 +42,23 @@ authRouter.post(
     authValidator,
     responseErrorValidationMiddleware,
     logIn
+);
+authRouter.post(
+    "/password-recovery",
+    attemptsMiddleware,
+    // authValidator,
+    emailValidation(),
+    responseErrorValidationMiddleware,
+    passwordRecovery
+);
+
+authRouter.post(
+    "/new-password",
+    attemptsMiddleware,
+    // authValidator,
+    passwordRecoveryValidation(),
+    responseErrorValidationMiddleware,
+    newPassword
 );
 
 authRouter.post('/registration',
@@ -82,10 +107,8 @@ authRouter.post('/registration-confirmation',
         res.sendStatus(StatusCodes.NO_CONTENT);
     })
 
-
 authRouter.post('/registration-email-resending',
     attemptsMiddleware,
-
     emailValidation(),
     async (req: any, res: Response) => {
         const resendEmailResult = await authService.resendEmail(req.body.email);

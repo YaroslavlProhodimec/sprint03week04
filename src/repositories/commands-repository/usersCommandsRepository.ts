@@ -51,7 +51,7 @@ export const usersCommandsRepository = {
     },
     async updateUserCodeAndExpirationDate(_id: ObjectId,
                                           code: string,
-                                          expirationDate: string) {
+                                          expirationDate: Date) {
         const findUser = usersCommandsRepository.findUserById(_id.toString());
         if (!findUser) return false;
         const updateIsUserConfirmed = await usersCollection.updateMany(

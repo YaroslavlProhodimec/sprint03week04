@@ -1,4 +1,4 @@
-import {htmlEmailConfirmationCodeLetter} from "../utils/html-email";
+import {htmlEmailConfirmationCodeLetter, htmlEmailPasswordRecoveryLetter} from "../utils/html-email";
 import {emailAdapter} from "../adapters/email-adapter";
 import {usersCommandsRepository} from "../repositories/commands-repository/usersCommandsRepository";
 import {createCodeExpirationDate} from "../utils/auth-utils/create-code-expiration-date";
@@ -12,6 +12,10 @@ export const emailManager = {
         const html = htmlEmailConfirmationCodeLetter(code);
         // console.log(html, 'html')
         await emailAdapter.sendEmail(user.accountData.email, html);
+    },
+    async sendPasswordRecoveryEmail(email: string, recoveryLink: string) {
+        const html = htmlEmailPasswordRecoveryLetter(recoveryLink);
+        await emailAdapter.sendEmail(email, html);
     },
     async resendEmailWithCode(user: WithId<any>): Promise<boolean> {
         const newCode = createConfirmationCode();

@@ -6,6 +6,7 @@ import { usersQueryRepository } from "../repositories/query-repository/usersQuer
 import { ObjectId, WithId } from "mongodb";
 import { UserAlreadyExistsError } from "../utils/errors-utils/registration-errors/UserAlreadyExistsError";
 import { TFieldError } from "../dto/common/ErrorResponseModel";
+import {usersCollection} from "../db";
 
 export const usersService = {
   // async createUser(
@@ -61,7 +62,18 @@ export const usersService = {
     return await bcrypt.hash(password, salt);
   },
 
-
+  async setRecoveryCode(userId: string, recoveryCode: string, expirationDate: Date) {
+    await usersCollection.updateOne(
+        { _id: new ObjectId(userId) }, // <-- приводим к ObjectId
+        {
+          $set: {
+            recoveryCode: recoveryCode,
+            recoveryCodeExpiration: expirationDate
+          }
+        }
+    );
+    return;
+  },
 
   async checkCredentials(
     loginOrEmail: string,

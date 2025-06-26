@@ -1,7 +1,5 @@
 import { add } from "date-fns";
 
-export const createCodeExpirationDate = () => {
-  return add(new Date(new Date().setHours(new Date().getHours() + 3)), {
-    days: 1,
-  }).toISOString();
-};
+export function createCodeExpirationDate(hours: number = 24): Date {
+  return new Date(Date.now() + hours * 60 * 60 * 1000);
+}

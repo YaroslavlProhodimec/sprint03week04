@@ -6,3 +6,11 @@ export const htmlEmailConfirmationCodeLetter = (code: string | null) => {
 </p>
 `;
 };
+export const htmlEmailPasswordRecoveryLetter = (recoveryLink: string) => {
+    return `
+<h1>Password recovery</h1>
+<p>To finish password recovery please follow the link below:
+    <a href='${recoveryLink}'>recovery password</a>
+</p>
+`;
+};

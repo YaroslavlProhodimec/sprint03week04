@@ -58,7 +58,6 @@ export const authService = {
             return new RegistrationError();
 
         }
-
     },
 
     async confirmCode(code: string): Promise<any | string> {

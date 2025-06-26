@@ -1,4 +1,4 @@
-import {SortDirection, WithId} from "mongodb";
+import {WithId} from "mongodb";
 import {UserDBType} from "../../dto/usersDTO/usersDTO";
 import {usersCollection} from "../../db";
 
@@ -61,6 +61,10 @@ export const usersQueryRepository = {
       "emailConfirmation.confirmationCode": code,
     });
     return foundUser;
+  }, async findByCodeRecovery(code: string): Promise<WithId<any> | null> {
+    return await usersCollection.findOne({
+      "recoveryCode": code,
+    });
   },
   async findUserByEmail(email: string): Promise<WithId<any> | null> {
     const user = await usersCollection.findOne({ "accountData.email": email });
