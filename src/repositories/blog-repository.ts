@@ -198,16 +198,18 @@ if (!posts){
     // }
 
     static async createBlog(data: CreateBlogDto) {
+        const createdAt = new Date();
+        const id = new ObjectId().toString(); // ← генерируем id
 
-        const createdAt = new Date()
         const newBlog: BlogType = {
+            id, // ← добавляем id
             ...data,
             createdAt: createdAt.toISOString(),
             isMembership: false
-        }
-        const result = await blogCollection.insertOne(newBlog)
-        return result.insertedId.toString()
+        };
 
+        const result = await blogCollection.insertOne(newBlog);
+        return result.insertedId.toString();
     }
 
     static async updateBlog(id: string, data: UpdateBlogDto) {

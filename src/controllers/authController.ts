@@ -364,5 +364,5 @@ export const newPassword= async (req: Request, res: Response) => {
         }
     );
 
-    res.sendStatus(StatusCodes.NO_CONTENT);
+    return res.sendStatus(StatusCodes.NO_CONTENT);
 };

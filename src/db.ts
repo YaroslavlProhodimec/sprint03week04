@@ -26,7 +26,6 @@ export async function runDb() {
 
 export const client = new MongoClient(mongoURI as string);
 
-const dbName = "blogs-posts";
 export const dbBlogs = client.db('node-blogs')
 
 export const apiLogsCollection = dbBlogs.collection('api-logs');
