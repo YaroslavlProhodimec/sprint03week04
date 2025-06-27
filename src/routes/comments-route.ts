@@ -6,7 +6,7 @@ import {forbiddenResponseMiddleware} from "../middlewares/forbiddenResponseMiddl
 import {validateObjectIdMiddleware} from "../middlewares/validateObjectIdMiddleware";
 import {accessTokenValidityMiddleware} from "../middlewares/accessTokenValidityMiddleware";
 import {responseErrorValidationMiddleware} from "../middlewares/responseErrorValidationMiddleware";
-import {deleteComment, updateComment} from "../controllers/commentsController";
+import {deleteComment, likeStatusController, updateComment} from "../controllers/commentsController";
 
 
 export const commentsRoute = Router({})
@@ -23,7 +23,8 @@ commentsRoute.get('/:id',
         }
         res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
     })
-//
+
+
 // commentsRoute.put('/:id',
 //     bearerAuth,
 //     validateObjectIdMiddleware,
@@ -54,6 +55,15 @@ commentsRoute.put(
     updateComment
 );
 
+commentsRoute.put(
+    "/:id/like-status",
+    accessTokenValidityMiddleware,
+    validateObjectIdMiddleware,
+    forbiddenResponseMiddleware,
+    responseErrorValidationMiddleware,
+    likeStatusController
+);
+
 commentsRoute.delete(
     "/:id",
     accessTokenValidityMiddleware,
@@ -75,8 +85,4 @@ commentsRoute.delete(
 //             res.sendStatus(StatusCodes.NO_CONTENT);
 //         }
 //     })
-//
-//
-//
-//
 //

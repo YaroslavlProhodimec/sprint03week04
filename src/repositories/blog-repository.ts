@@ -4,10 +4,30 @@ import {ObjectId, WithId} from "mongodb";
 import {CreateBlogDto, SortDataType, UpdateBlogDto} from "../types/blog/input";
 import {blogMapper} from "../types/blog/mapper";
 import {blogCollection, postCollection} from "../db";
+import {BlogModel} from "../models/blog-model";
 
 
 export class BlogRepository {
+        async getBlogs(): Promise<BlogType[]> {
+            return BlogModel.find({},{_id: 0 })
+        }
 
+        async getBlogById(id: string): Promise<BlogType | null> {
+            return BlogModel.findOne({ id },{ _id: 0 })
+        }
+
+        async updateBlog(
+            id: string,
+            body: {name: 'string',description: 'string'}
+        ): Promise<boolean> {
+            const res = await BlogModel.updateOne({ id }, body)
+            return res.matchedCount === 1
+        }
+
+        async deleteBlog(id: string): Promise<boolean> {
+            const res = await BlogModel.deleteOne({ id })
+            return res.deletedCount === 1
+        }
     static async getAllBlogs(sortData: SortDataType) {
 
         const sortDirection = sortData.sortDirection ?? 'desc'

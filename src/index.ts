@@ -1,28 +1,20 @@
-import {runDB} from "./db";
+import {runDb, runDB} from "./db";
 import { app } from "./settings";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
+
+
+const port = process.env.PORT || 3999
+
 const startApp = async () => {
-    try {
-        await runDB();
-        const port = process.env.PORT || 5003;
-
-        app.set('trust proxy', true);
-
-        app.listen(port, () => {
-            console.log(`Server is running on port ${port}`);
-        });
-    } catch (error) {
-        console.error('Failed to start server:', error);
-        process.exit(1);
-    }
-};
-
-// Запуск только если файл запущен напрямую
-if (require.main === module) {
-    startApp();
+    await runDb()
+    app.listen(port, () => {
+        console.log(`Example app listening on port ${port}`)
+    })
 }
+
+startApp()
 
 export default app;

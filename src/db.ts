@@ -3,9 +3,26 @@ import * as dotenv from "dotenv";
 import { RefreshTokensBlacklistDB } from "./dto/authDTO/authDTO";
 import {BlogType} from "./types/blog/output";
 import {PostType} from "./types/post/output";
+import mongoose from 'mongoose'
+
 import { CallToAPIType } from "./features/apiCallHistory/types";
 dotenv.config();
-export const mongoURI = process.env.MONGO_URL
+// export const mongoURI = process.env.MONGO_URL
+
+
+
+const dbName = 'home_works'
+const mongoURI = process.env.mongoURI || `mongodb://0.0.0.0:27017/${dbName}`
+
+export async function runDb() {
+    try {
+        await mongoose.connect(mongoURI)
+        console.log('it is ok')
+    } catch (e) {
+        console.log('no connection')
+        await mongoose.disconnect()
+    }
+}
 
 export const client = new MongoClient(mongoURI as string);
 
@@ -21,6 +38,9 @@ export const usersCollection = dbBlogs.collection<any>('users')
 export const refreshTokensBlacklistedCollection =
     dbBlogs.collection<RefreshTokensBlacklistDB>("refresh-tokens-blacklisted");
 // export const APICallHistoryModelClass = mongoose.model<CallToAPIType>("APICallHistory",APICallHistorySchema);
+
+export const commentLikesCollection = dbBlogs.collection('commentLikes');
+
 
 export const runDB = async () => {
     try {

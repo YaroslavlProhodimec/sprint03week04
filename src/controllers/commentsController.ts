@@ -11,6 +11,9 @@ import { URIParamsRequest } from "../dto/common/URIParamsRequest";
 import { commentsQueryRepository } from "../repositories/query-repository/commentsQueryRepository";
 import { StatusCodes } from "http-status-codes";
 import { commentsService } from "../domain/comments-service";
+import {CommentsRepository} from "../repositories/comments-repository";
+import {commentsCommandsRepository} from "../repositories/commands-repository/commentsCommandsRepository";
+import {LikesRepository} from "../repositories/likes-repository";
 
 export const getCommentById = async (
   req: RequestWithURIParam<URIParamsRequest>,
@@ -53,4 +56,26 @@ export const updateComment = async (
   } else {
     res.sendStatus(StatusCodes.NO_CONTENT);
   }
+};
+export const likeStatusController = async (
+  req: RequestWithURIParamsAndBody<URIParamsRequest, any>,
+  res: Response
+) => {
+
+  const commentId = req.params.id;
+  const userId = req.userId; // из мидлвеера
+  const { likeStatus } = req.body;
+
+  // 1. Проверить, существует ли комментарий
+  const comment = await  commentsCommandsRepository.findCommentById(commentId);
+  if (!comment) return res.status(404).send();
+
+  // 2. Обновить/удалить/создать лайк
+  if (likeStatus === 'None') {
+    await LikesRepository.deleteLike(commentId, userId);
+  } else {
+    await LikesRepository.upsertLike(commentId, userId, likeStatus);
+  }
+
+  return res.sendStatus(204);
 };
