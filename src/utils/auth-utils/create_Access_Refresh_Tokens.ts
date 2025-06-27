@@ -4,7 +4,7 @@ export const create_access_refresh_tokens = async (userId: string,deviceId?:stri
   const accessToken = await jwtService.createJWT(
       {userId},
     process.env.ACCESS_TOKEN_SECRET as string,
-    60
+    10
   );
   const refreshToken = await jwtService.createJWT(
       { userId, deviceId },
