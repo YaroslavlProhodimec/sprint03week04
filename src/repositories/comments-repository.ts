@@ -62,16 +62,49 @@ export class CommentsRepository {
         }
     }
 
+    // static async createComments(content: string, id: string, postId: any) {
+    //
+    //     const createdAt = new Date()
+    //
+    //     // const user: any = await usersCollection.findOne({_id: id})
+    //     const foundUser = await usersCommandsRepository.findUserById(id);
+    //
+    //     const newComment: any = {
+    //         // id: postId,
+    //         postId:postId,
+    //         content,
+    //         commentatorInfo: {
+    //             userId: id,
+    //             userLogin: foundUser.accountData.login,
+    //         },
+    //         createdAt: createdAt.toISOString()
+    //     }
+    //     const comment = await commentsCollection.insertOne(newComment)
+    //
+    //     if (comment) {
+    //         const result: any = await commentsCollection.findOne({_id:comment.insertedId })
+    //         return {
+    //             id: result!._id,
+    //             content: result!.content,
+    //             commentatorInfo: result.commentatorInfo,
+    //             // commentatorInfo: {
+    //             //     userId: result.commentatorInfo.userId,
+    //             //     userLogin: result.commentatorInfo.userLogin,
+    //             // },
+    //             createdAt: result!.createdAt,
+    //         }
+    //
+    //     } else {
+    //         return null
+    //     }
+    //     //
+    // }
     static async createComments(content: string, id: string, postId: any) {
-
         const createdAt = new Date()
-
-        // const user: any = await usersCollection.findOne({_id: id})
         const foundUser = await usersCommandsRepository.findUserById(id);
 
         const newComment: any = {
-            // id: postId,
-            postId:postId,
+            postId: postId,
             content,
             commentatorInfo: {
                 userId: id,
@@ -82,24 +115,22 @@ export class CommentsRepository {
         const comment = await commentsCollection.insertOne(newComment)
 
         if (comment) {
-            const result: any = await commentsCollection.findOne({_id:comment.insertedId })
+            const result: any = await commentsCollection.findOne({_id: comment.insertedId })
             return {
                 id: result!._id,
                 content: result!.content,
                 commentatorInfo: result.commentatorInfo,
-                // commentatorInfo: {
-                //     userId: result.commentatorInfo.userId,
-                //     userLogin: result.commentatorInfo.userLogin,
-                // },
                 createdAt: result!.createdAt,
+                likesInfo: {
+                    likesCount: 0,
+                    dislikesCount: 0,
+                    myStatus: "None"
+                }
             }
-
         } else {
             return null
         }
-        //
     }
-
     static async updateComment(id: string, content: any,) {
 
         let result = await commentsCollection.updateOne({_id:
