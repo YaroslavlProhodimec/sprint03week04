@@ -57,6 +57,7 @@ export const updateComment = async (
     res.sendStatus(StatusCodes.NO_CONTENT);
   }
 };
+
 export const likeStatusController = async (
   req: RequestWithURIParamsAndBody<URIParamsRequest, any>,
   res: Response

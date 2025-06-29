@@ -7,6 +7,8 @@ import {validateObjectIdMiddleware} from "../middlewares/validateObjectIdMiddlew
 import {accessTokenValidityMiddleware} from "../middlewares/accessTokenValidityMiddleware";
 import {responseErrorValidationMiddleware} from "../middlewares/responseErrorValidationMiddleware";
 import {deleteComment, likeStatusController, updateComment} from "../controllers/commentsController";
+import {commentLikesCollection} from "../db";
+import {commentsMapper} from "../types/comments/mapper";
 
 
 export const commentsRoute = Router({})
@@ -14,11 +16,29 @@ export const commentsRoute = Router({})
 commentsRoute.get('/:id',
 
     async (req: any, res: Response) => {
+        const commentId = req.params.id;
+        const currentUserId = req.userId
 
         const comment = await CommentsRepository.getCommentById(req.params.id)
 
+        // Считаем лайки и дизлайки
+        const likesCount = await commentLikesCollection.countDocuments({ commentId, likeStatus: "Like" });
+        const dislikesCount = await commentLikesCollection.countDocuments({ commentId, likeStatus: "Dislike" });
+
+        // Определяем статус пользователя
+        let myStatus = "None";
+        if (currentUserId) {
+            const myLike = await commentLikesCollection.findOne({ commentId, userId: currentUserId });
+            if (myLike) myStatus = myLike.likeStatus;
+        }
+
+        // Маппим комментарий с лайками
+        const mappedComment = commentsMapper(comment, myStatus, likesCount, dislikesCount);
+
+
+
         if (comment) {
-            res.status(HTTP_STATUSES.OK_200).json(comment)
+            res.status(HTTP_STATUSES.OK_200).json(mappedComment)
             return;
         }
         res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)

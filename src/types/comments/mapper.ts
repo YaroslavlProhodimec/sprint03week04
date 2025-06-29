@@ -1,12 +1,9 @@
-// import {WithId} from "mongodb";
-// id: post._id.toString(),
-//     title: post.title,
-//     shortDescription: post.shortDescription,
-//     content: post.content,
-//     blogId: post.blogId,
-//     blogName: post.blogName,
-//     createdAt: post.createdAt
-export const commentsMapper = (comment: any): any => {
+export const commentsMapper = (
+    comment: any,
+    myStatus: "Like" | "Dislike" | "None" | string = "None",
+    likesCount: number = 0,
+    dislikesCount: number = 0
+): any => {
     return {
         id: comment._id.toString(),
         content: comment.content,
@@ -15,13 +12,10 @@ export const commentsMapper = (comment: any): any => {
             userLogin: comment.commentatorInfo.userLogin,
         },
         createdAt: comment.createdAt,
+        likesInfo: {
+            likesCount,
+            dislikesCount,
+            myStatus
+        }
     }
-// {
-//     "id": "string",
-//     "content": "string",
-//     "commentatorInfo": {
-//     "userId": "string",
-//         "userLogin": "string"
-// },
-//     "createdAt": "2024-01-04T09:35:46.339Z"
 }
