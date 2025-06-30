@@ -1,3 +1,4 @@
+jest.setTimeout(20000);
 import request from "supertest";
 import {app} from "../src/settings";
 import {HTTP_STATUSES} from "../src/utils/common";

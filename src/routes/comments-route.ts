@@ -138,7 +138,7 @@ commentsRoute.put(
     "/:id/like-status",
     accessTokenValidityMiddleware,
     validateObjectIdMiddleware,
-    forbiddenResponseMiddleware,
+    // forbiddenResponseMiddleware,
     responseErrorValidationMiddleware,
     likeStatusController
 );
