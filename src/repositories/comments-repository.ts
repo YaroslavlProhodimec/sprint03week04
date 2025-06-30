@@ -53,6 +53,7 @@ export class CommentsRepository {
             const comment: any = await commentsCollection.findOne({_id: new ObjectId(id)
             })
             console.log(comment, 'comment')
+            console.log(comment, 'лох')
             if (!comment) {
                 return null
             }
@@ -99,9 +100,43 @@ export class CommentsRepository {
     //     }
     //     //
     // }
+    // static async createComments(content: string, id: string, postId: any) {
+    //     const createdAt = new Date()
+    //     const foundUser = await usersCommandsRepository.findUserById(id);
+    //
+    //     const newComment: any = {
+    //         postId: postId,
+    //         content,
+    //         commentatorInfo: {
+    //             userId: id,
+    //             userLogin: foundUser.accountData.login,
+    //         },
+    //         createdAt: createdAt.toISOString()
+    //     }
+    //     const comment = await commentsCollection.insertOne(newComment)
+    //
+    //     if (comment) {
+    //         const result: any = await commentsCollection.findOne({_id: comment.insertedId })
+    //         return {
+    //             id: result!._id,
+    //             content: result!.content,
+    //             commentatorInfo: result.commentatorInfo,
+    //             createdAt: result!.createdAt,
+    //             likesInfo: {
+    //                 likesCount: 0,
+    //                 dislikesCount: 0,
+    //                 myStatus: "None"
+    //             }
+    //         }
+    //     } else {
+    //         return null
+    //     }
+    // }
     static async createComments(content: string, id: string, postId: any) {
         const createdAt = new Date()
+        console.log('Ищем пользователя:', id);
         const foundUser = await usersCommandsRepository.findUserById(id);
+        console.log('Пользователь найден:', !!foundUser);
 
         const newComment: any = {
             postId: postId,
@@ -112,10 +147,14 @@ export class CommentsRepository {
             },
             createdAt: createdAt.toISOString()
         }
+
+        console.log('Вставляем комментарий...');
         const comment = await commentsCollection.insertOne(newComment)
+        console.log('Комментарий вставлен:', !!comment);
 
         if (comment) {
             const result: any = await commentsCollection.findOne({_id: comment.insertedId })
+            console.log('Комментарий найден после вставки:', !!result);
             return {
                 id: result!._id,
                 content: result!.content,

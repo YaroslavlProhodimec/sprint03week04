@@ -69,18 +69,41 @@ postRoute.delete('/:id', authMiddleware, async (req: Request<BlogParams>, res: R
 })
 
 
+// postRoute.post('/:postId/comments', accessTokenValidityMiddleware,
+//     commentsValidation(),
+//     async (req: any, res: Response) => {
+//         const content = req.body.content
+//         const postId  = req.params.postId
+//
+//         const post = await PostRepository.getPostById(postId)
+//         if(!post){
+//             res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
+//             return;
+//         }
+//         const newComment = await CommentsRepository.createComments(content, req.userId,postId)
+//
+//         if (newComment) {
+//             res.status(HTTP_STATUSES.CREATED_201).json(newComment)
+//             return;
+//         }
+//
+//         res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
+//     })
 postRoute.post('/:postId/comments', accessTokenValidityMiddleware,
     commentsValidation(),
     async (req: any, res: Response) => {
+        console.log('POST /posts/:postId/comments — старт');
         const content = req.body.content
         const postId  = req.params.postId
 
         const post = await PostRepository.getPostById(postId)
+        console.log('Пост найден:', !!post);
         if(!post){
             res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
             return;
         }
         const newComment = await CommentsRepository.createComments(content, req.userId,postId)
+        console.log('Комментарий создан:', !!newComment);
 
         if (newComment) {
             res.status(HTTP_STATUSES.CREATED_201).json(newComment)
@@ -89,7 +112,6 @@ postRoute.post('/:postId/comments', accessTokenValidityMiddleware,
 
         res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
     })
-
 postRoute.get('/:postId/comments',
     // commentsValidation(),
     // commentsIdValidation(),

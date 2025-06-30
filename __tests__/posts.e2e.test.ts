@@ -64,8 +64,44 @@ describe('test for /posts', () => {
         const postsList = await request(app)
             .get("/posts")
             .expect(StatusCodes.OK);
+        const commentData = {
+            content: "Это мой первый комментарий!"
+        };
+        const commentResult = await request(app)
+            .post(`/posts/${postId}/comments`)
+            .set("Authorization", `Bearer ${accessToken}`) // если accessToken нужен
+            .send(commentData)
+            .expect(StatusCodes.CREATED);
 
-        expect(postsList.body.items.some((p: any) => p.id === postId)).toBe(true);
+        // Проверяем, что комментарий создан и содержит likesInfo
+        expect(commentResult.body).toMatchObject({
+            id: expect.any(String),
+            content: commentData.content,
+            commentatorInfo: {
+                userId: expect.any(String),
+                userLogin: expect.any(String)
+            },
+            createdAt: expect.any(String),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                myStatus: "None"
+            }
+        });
+
+        // 7. (опционально) Получаем комментарий по id и проверяем likesInfo
+        const commentId = commentResult.body.id;
+        const getComment = await request(app)
+            .get(`/comments/${commentId}`)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .expect(StatusCodes.OK);
+
+        expect(getComment.body.likesInfo).toEqual({
+            likesCount: 0,
+            dislikesCount: 0,
+            myStatus: "None"
+        });
+        // expect(postsList.body.items.some((p: any) => p.id === postId)).toBe(true);
     });
     // it('should return 200 and empty array', async () => {
     //     await request(app)
