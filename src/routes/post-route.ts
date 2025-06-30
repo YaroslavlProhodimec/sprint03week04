@@ -6,6 +6,7 @@ import {accessTokenValidityMiddleware, authMiddleware} from "../middlewares/auth
 import {HTTP_STATUSES} from "../utils/common";
 import {commentsValidation} from "../validators/comments-validator";
 import {CommentsRepository} from "../repositories/comments-repository";
+import {optionalAuthMiddleware} from "../middlewares/optionalAuthMiddleware";
 
 
 export const postRoute = Router({})
@@ -115,7 +116,10 @@ postRoute.post('/:postId/comments', accessTokenValidityMiddleware,
 postRoute.get('/:postId/comments',
     // commentsValidation(),
     // commentsIdValidation(),
+    optionalAuthMiddleware,
+
     async (req: any, res: Response) => {
+        const currentUserId = req.userId;
         const sortData = {
             searchNameTerm: req.query.searchNameTerm,
             sortBy: req.query.sortBy,
@@ -130,7 +134,7 @@ postRoute.get('/:postId/comments',
             return;
         }
 
-        const comments = await CommentsRepository.getAllCommentsQueryParam(sortData,postId)
+        const comments = await CommentsRepository.getAllCommentsQueryParam(sortData,postId,currentUserId)
 
         if (comments) {
             res.status(HTTP_STATUSES.OK_200).json(comments)
