@@ -2,10 +2,10 @@ import {OutputPostType, PostType} from "../types/post/output";
 import {ObjectId, WithId} from "mongodb";
 import {commentsMapper} from "../types/comments/mapper";
 import {usersCommandsRepository} from "./commands-repository/usersCommandsRepository";
-import {commentsCollection} from "../db";
+import {commentLikesCollection, commentsCollection} from "../db";
 
 export class CommentsRepository {
-    static async getAllCommentsQueryParam(sortData: any, postId: any) {
+    static async getAllCommentsQueryParam(sortData: any, postId: any,currentUserId?: string) {
         const sortDirection = sortData.sortDirection ?? 'desc'
         const sortBy = sortData.sortBy ?? 'createdAt'
         const searchNameTerm = sortData.searchNameTerm ?? null
@@ -32,6 +32,20 @@ export class CommentsRepository {
             .limit(+pageSize)
             .toArray()
 
+        const items = await Promise.all(comments.map(async (comment: any) => {
+            const commentId = comment._id.toString();
+            const likesCount = await commentLikesCollection.countDocuments({ commentId, likeStatus: "Like" });
+            const dislikesCount = await commentLikesCollection.countDocuments({ commentId, likeStatus: "Dislike" });
+
+            let myStatus = "None";
+            if (currentUserId) {
+                const myLike = await commentLikesCollection.findOne({ commentId, userId: currentUserId });
+                if (myLike) myStatus = myLike.likeStatus;
+            }
+
+            return commentsMapper(comment, myStatus, likesCount, dislikesCount);
+        }));
+
         const totalCount = await commentsCollection
             .countDocuments({postId:postId})
 
@@ -42,7 +56,8 @@ export class CommentsRepository {
             page: +pageNumber,
             pageSize: +pageSize,
             totalCount: totalCount,
-            items: comments.map(commentsMapper)
+            // items: comments.map(commentsMapper)
+            items
         }
 
 
