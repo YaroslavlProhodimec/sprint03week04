@@ -10,6 +10,7 @@ import {deleteComment, likeStatusController, updateComment} from "../controllers
 import {commentLikesCollection} from "../db";
 import {commentsMapper} from "../types/comments/mapper";
 import {optionalAuthMiddleware} from "../middlewares/optionalAuthMiddleware";
+import {likeStatusValidation} from "../validators/like-status";
 
 
 export const commentsRoute = Router({})
@@ -138,6 +139,7 @@ commentsRoute.put(
     "/:id/like-status",
     accessTokenValidityMiddleware,
     validateObjectIdMiddleware,
+    likeStatusValidation(),
     // forbiddenResponseMiddleware,
     responseErrorValidationMiddleware,
     likeStatusController
