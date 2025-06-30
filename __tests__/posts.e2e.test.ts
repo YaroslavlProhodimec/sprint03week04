@@ -96,7 +96,78 @@ describe('test for /posts', () => {
             .set("Authorization", `Bearer ${accessToken}`)
             .expect(StatusCodes.OK);
 
-        expect(getComment.body.likesInfo).toEqual({
+        // 8. Ставим лайк комментарию
+        const likeData = {
+            likeStatus: "Like"
+        };
+        await request(app)
+            .put(`/comments/${commentId}/like-status`)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send(likeData)
+            .expect(StatusCodes.NO_CONTENT);
+
+        // 9. Получаем комментарий и проверяем, что лайк появился
+        const getCommentAfterLike = await request(app)
+            .get(`/comments/${commentId}`)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .expect(StatusCodes.OK);
+
+        expect(getCommentAfterLike.body.likesInfo).toEqual({
+            likesCount: 1,
+            dislikesCount: 0,
+            myStatus: "Like"
+        });
+
+        // 10. Меняем лайк на дизлайк
+        const dislikeData = {
+            likeStatus: "Dislike"
+        };
+        await request(app)
+            .put(`/comments/${commentId}/like-status`)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send(dislikeData)
+            .expect(StatusCodes.NO_CONTENT);
+
+        // 11. Проверяем, что дизлайк появился
+        const getCommentAfterDislike = await request(app)
+            .get(`/comments/${commentId}`)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .expect(StatusCodes.OK);
+
+        expect(getCommentAfterDislike.body.likesInfo).toEqual({
+            likesCount: 0,
+            dislikesCount: 1,
+            myStatus: "Dislike"
+        });
+
+        // 12. Убираем лайк/дизлайк (ставим None)
+        const noneData = {
+            likeStatus: "None"
+        };
+        await request(app)
+            .put(`/comments/${commentId}/like-status`)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .send(noneData)
+            .expect(StatusCodes.NO_CONTENT);
+
+        // 13. Проверяем, что лайки/дизлайки убрались
+        const getCommentAfterNone = await request(app)
+            .get(`/comments/${commentId}`)
+            .set("Authorization", `Bearer ${accessToken}`)
+            .expect(StatusCodes.OK);
+
+        expect(getCommentAfterNone.body.likesInfo).toEqual({
+            likesCount: 0,
+            dislikesCount: 0,
+            myStatus: "None"
+        });
+
+        // 14. (опционально) Проверяем без авторизации
+        const getCommentUnauthorized = await request(app)
+            .get(`/comments/${commentId}`)
+            .expect(StatusCodes.OK);
+
+        expect(getCommentUnauthorized.body.likesInfo).toEqual({
             likesCount: 0,
             dislikesCount: 0,
             myStatus: "None"
