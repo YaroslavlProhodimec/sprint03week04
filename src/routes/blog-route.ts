@@ -98,6 +98,7 @@ blogRoute.post('/:id/posts',
     }>, res: Response) => {
 
         const id = req.params.id
+        const userId = req.userId
         const {title, shortDescription, content} = req.body
 
         const blog = await BlogRepository.getBlogById(id)
@@ -113,7 +114,7 @@ blogRoute.post('/:id/posts',
             res.sendStatus(404)
         }
 
-        const post = await PostRepository.getPostById(createdPostId)
+        const post = await PostRepository.getPostById(createdPostId,userId)
 
         // console.log(post, 'post')
         if (!post) {

@@ -152,6 +152,7 @@
 import { Request, Response } from "express";
 import {PostRepository} from "../repositories/post-repository";
 import {PostLikesRepository} from "../repositories/post-likes-repository";
+import {postLikesCollection} from "../db";
 
 export const postLikeStatusController = async (
     req: Request,
@@ -162,7 +163,7 @@ export const postLikeStatusController = async (
     const { likeStatus } = req.body;
 
     // 1. Проверить, существует ли пост
-    const post = await PostRepository.getPostById(postId);
+    const post = await PostRepository.getPostById(postId,userId);
 
     if (!post) return res.status(404).send();
 
@@ -172,6 +173,8 @@ export const postLikeStatusController = async (
     } else {
         await PostLikesRepository.upsertLike(postId, userId, likeStatus);
     }
-
+    // Вот здесь добавь лог:
+    const likes = await postLikesCollection.find({ postId }).toArray();
+    console.log('postLikesCollection for postId', postId, likes);
     return res.sendStatus(204);
 };

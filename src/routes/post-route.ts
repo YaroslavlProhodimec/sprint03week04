@@ -23,6 +23,10 @@ export const postRoute = Router({})
 // })
 // new variants  with pagination
 postRoute.get('/',  optionalAuthMiddleware, async (req: Request, res: Response) => {
+
+    const userId = req.userId
+    console.log(userId,' userId лох')
+
     const sortData = {
         searchNameTerm: req.query.searchNameTerm,
         sortBy: req.query.sortBy,
@@ -31,12 +35,13 @@ postRoute.get('/',  optionalAuthMiddleware, async (req: Request, res: Response) 
         pageSize: req.query.pageSize,
     }
 
-    const posts = await PostRepository.getAllPostsQueryParam(sortData,req.userId)
+    const posts = await PostRepository.getAllPostsQueryParam(sortData,userId)
     res.status(HTTP_STATUSES.OK_200).json(posts)
 })
-postRoute.get('/:id', async (req: Request<BlogParams>, res: Response) => {
+postRoute.get('/:id',    optionalAuthMiddleware, async (req: Request<BlogParams>, res: Response) => {
+    const userId = req.userId
 
-    const post = await PostRepository.getPostById(req.params.id)
+    const post = await PostRepository.getPostById(req.params.id,userId)
 
     if (post) {
         res.status(HTTP_STATUSES.OK_200).json(post)
@@ -47,9 +52,10 @@ postRoute.get('/:id', async (req: Request<BlogParams>, res: Response) => {
 })
 postRoute.post('/', authMiddleware, postValidation(), async (req: Request, res: Response) => {
     const creatData = req.body
+    const userId = req.userId
     const postID = await PostRepository.createPost(creatData)
     if (postID) {
-        const newPost = await PostRepository.getPostById(postID)
+        const newPost = await PostRepository.getPostById(postID,userId)
         if (newPost) {
             res.status(HTTP_STATUSES.CREATED_201).json(newPost)
             return;
@@ -102,8 +108,9 @@ postRoute.post('/:postId/comments', accessTokenValidityMiddleware,
         console.log('POST /posts/:postId/comments — старт');
         const content = req.body.content
         const postId  = req.params.postId
+        const userId  = req.userId
 
-        const post = await PostRepository.getPostById(postId)
+        const post = await PostRepository.getPostById(postId,userId)
         console.log('Пост найден:', !!post);
         if(!post){
             res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
@@ -135,7 +142,7 @@ postRoute.get('/:postId/comments',
             pageSize: req.query.pageSize,
         }
         const postId  = req.params.postId
-        const post = await PostRepository.getPostById(postId)
+        const post = await PostRepository.getPostById(postId,currentUserId)
         if(!post){
             res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
             return;

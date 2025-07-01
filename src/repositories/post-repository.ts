@@ -62,7 +62,7 @@ export class PostRepository {
 
     }
 
-    static async getPostById(id: any): Promise<OutputPostType | null> {
+    static async getPostById(id: any,userId?:string): Promise<OutputPostType | null> {
         try {
             const post: any = await postCollection.findOne({_id: new ObjectId(id),
                 // createdAt:new Date()
@@ -70,7 +70,7 @@ export class PostRepository {
             if (!post) {
                 return null
             }
-            return postMapper(post)
+            return postMapper(post,userId)
         } catch (e) {
             return null
         }
