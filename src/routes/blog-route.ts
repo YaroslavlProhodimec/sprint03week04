@@ -7,6 +7,7 @@ import {HTTP_STATUSES} from "../utils/common";
 import {RequestWithBodyAndParams, RequestWithQuery} from "../types/common";
 import {PostRepository} from "../repositories/post-repository";
 import {postValidation} from "../validators/post-validator";
+import {optionalAuthMiddleware} from "../middlewares/optionalAuthMiddleware";
 
 type RequestTypeWithQuery<Q> = Request<{}, {}, {}, Q>
 
@@ -41,9 +42,11 @@ blogRoute.get('/:id', idParamsValidation, async (req: Request, res: Response) =>
 
 blogRoute.get('/:id/posts',
     // idParamsValidation,
+    optionalAuthMiddleware,
     async (req: Request, res: Response) => {
 
         const id = req.params.id
+        const userId = req.userId
 
         const sortData = {
             sortBy: req.query.sortBy,
@@ -54,7 +57,7 @@ blogRoute.get('/:id/posts',
 
         // pagesCount=2&page=1&pageSize=10&totalCount=12
 
-        const posts = await BlogRepository.getPostsByBlogId(id, sortData);
+        const posts = await BlogRepository.getPostsByBlogId(id, sortData,userId);
         // const blog = await BlogRepository.getBlogById(id,sortData);
         // console.log(posts.,'posts')
         if (posts!.items.length < 1) {

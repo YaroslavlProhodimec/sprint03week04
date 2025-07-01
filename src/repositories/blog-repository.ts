@@ -5,6 +5,7 @@ import {CreateBlogDto, SortDataType, UpdateBlogDto} from "../types/blog/input";
 import {blogMapper} from "../types/blog/mapper";
 import {blogCollection, postCollection} from "../db";
 import {BlogModel} from "../models/blog-model";
+import {postMapper} from "../types/post/mapper";
 
 
 export class BlogRepository {
@@ -74,44 +75,36 @@ export class BlogRepository {
 
     }
 
-    static async getPostsByBlogId(blogId: string, sortData: any) {
+    static async getPostsByBlogId(blogId: string, sortData: any, userId?: string) {
         const sortBy = sortData.sortBy ?? 'createdAt'
         const sortDirection = sortData.sortDirection ?? 'desc'
         const pageNumber = sortData.pageNumber ?? 1
         const pageSize = sortData.pageSize ?? 10
-        //
+
         const posts = await postCollection
-            .find({blogId: blogId})
-            .sort(sortBy, sortDirection)
+            .find({ blogId: blogId })
+            .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
             .skip((+pageNumber - 1) * +pageSize)
             .limit(+pageSize)
-            .toArray()
-if (!posts){
-    return  null
-}
+            .toArray();
 
-        const totalCount = await postCollection
-            .countDocuments({blogId: blogId})
+        if (!posts) {
+            return null;
+        }
 
-        const pagesCount = Math.ceil(totalCount / +pageSize)
+        const totalCount = await postCollection.countDocuments({ blogId: blogId });
+        const pagesCount = Math.ceil(totalCount / +pageSize);
+
+        // Используем асинхронный маппер!
+        const items = await Promise.all(posts.map((p: any) => postMapper(p, userId)));
 
         return {
             pagesCount,
             page: +pageNumber,
-            // pageSize: +pageSize,
             pageSize: +pageSize,
             totalCount,
-            items: posts.map((p: any) => ({
-                id: p._id,
-                title: p.title,
-                shortDescription: p.shortDescription,
-                content: p.content,
-                createdAt: p.createdAt,
-                blogName: p.blogName,
-                blogId: p.blogId,
-            }))
-        }
-
+            items
+        };
     }
 
     static async createPostToBlog(blogId: string, postData: any) {
