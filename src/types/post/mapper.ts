@@ -35,7 +35,7 @@ export const postMapper = async (post: any, userId?: string) => {
     );
 
     return {
-        id: post.id,
+        id: post.id || post._id?.toString(),
         title: post.title,
         shortDescription: post.shortDescription,
         content: post.content,
