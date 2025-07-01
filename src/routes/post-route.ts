@@ -7,6 +7,12 @@ import {HTTP_STATUSES} from "../utils/common";
 import {commentsValidation} from "../validators/comments-validator";
 import {CommentsRepository} from "../repositories/comments-repository";
 import {optionalAuthMiddleware} from "../middlewares/optionalAuthMiddleware";
+import {validateObjectIdMiddleware} from "../middlewares/validateObjectIdMiddleware";
+import {likeStatusValidation} from "../validators/like-status";
+import {responseErrorValidationMiddleware} from "../middlewares/responseErrorValidationMiddleware";
+import {likeStatusController} from "../controllers/commentsController";
+import {commentsRoute} from "./comments-route";
+import {postLikeStatusController} from "../controllers/postsController";
 
 
 export const postRoute = Router({})
@@ -16,7 +22,7 @@ export const postRoute = Router({})
 //     res.status(HTTP_STATUSES.OK_200).json(posts)
 // })
 // new variants  with pagination
-postRoute.get('/', async (req: Request, res: Response) => {
+postRoute.get('/',  optionalAuthMiddleware, async (req: Request, res: Response) => {
     const sortData = {
         searchNameTerm: req.query.searchNameTerm,
         sortBy: req.query.sortBy,
@@ -25,7 +31,7 @@ postRoute.get('/', async (req: Request, res: Response) => {
         pageSize: req.query.pageSize,
     }
 
-    const posts = await PostRepository.getAllPostsQueryParam(sortData)
+    const posts = await PostRepository.getAllPostsQueryParam(sortData,req.userId)
     res.status(HTTP_STATUSES.OK_200).json(posts)
 })
 postRoute.get('/:id', async (req: Request<BlogParams>, res: Response) => {
@@ -113,6 +119,7 @@ postRoute.post('/:postId/comments', accessTokenValidityMiddleware,
 
         res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
     })
+
 postRoute.get('/:postId/comments',
     // commentsValidation(),
     // commentsIdValidation(),
@@ -143,7 +150,12 @@ postRoute.get('/:postId/comments',
         res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
     })
 
-
-
-
+postRoute.put(
+    "/:id/like-status",
+    accessTokenValidityMiddleware,
+    validateObjectIdMiddleware,
+    likeStatusValidation(),
+    responseErrorValidationMiddleware,
+    postLikeStatusController
+);
 

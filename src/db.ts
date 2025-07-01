@@ -23,7 +23,7 @@ export const refreshTokensBlacklistedCollection =
 // export const APICallHistoryModelClass = mongoose.model<CallToAPIType>("APICallHistory",APICallHistorySchema);
 
 export const commentLikesCollection = dbBlogs.collection('commentLikes');
-
+export const postLikesCollection = dbBlogs.collection('postLikes');
 export const runDB = async () => {
     try {
         await client.connect();

@@ -149,3 +149,29 @@
 //     res.status(StatusCodes.OK).send(commentsForSpecifiedPost);
 //   }
 // };
+import { Request, Response } from "express";
+import {PostRepository} from "../repositories/post-repository";
+import {PostLikesRepository} from "../repositories/post-likes-repository";
+
+export const postLikeStatusController = async (
+    req: Request,
+    res: Response
+) => {
+    const postId = req.params.id;
+    const userId = req.userId; // предполагается, что userId добавлен мидлвеером
+    const { likeStatus } = req.body;
+
+    // 1. Проверить, существует ли пост
+    const post = await PostRepository.getPostById(postId);
+
+    if (!post) return res.status(404).send();
+
+    // 2. Обновить/удалить/создать лайк
+    if (likeStatus === 'None') {
+        await PostLikesRepository.deleteLike(postId, userId);
+    } else {
+        await PostLikesRepository.upsertLike(postId, userId, likeStatus);
+    }
+
+    return res.sendStatus(204);
+};

@@ -6,7 +6,7 @@ import {CreatePostDto, UpdatePostDto} from "../types/post/input";
 import {postCollection} from "../db";
 
 export class PostRepository {
-    static async getAllPostsQueryParam(sortData: any) {
+    static async getAllPostsQueryParam(sortData: any,userId?: string) {
 
         const sortDirection = sortData.sortDirection ?? 'desc'
         const sortBy = sortData.sortBy ?? 'createdAt'
@@ -40,14 +40,18 @@ export class PostRepository {
 
         const pageCount = Math.ceil(totalCount / +pageSize)
 
-        return {
-            pagesCount:pageCount,
-            page:+pageNumber,
-            pageSize:+pageSize,
-            totalCount:+totalCount,
-            items:post.map(postMapper)
-        }
+        const items =
+            await Promise.all(
+            post.map((p:any) => postMapper(p, userId)) // userId бери из запроса, если есть
+        );
 
+        return {
+            pagesCount: pageCount,
+            page: +pageNumber,
+            pageSize: +pageSize,
+            totalCount: +totalCount,
+            items
+        };
 
     }
     static async getAllPosts() {
